@@ -1,0 +1,205 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Datasets - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-table"></i> Datasets
+        <span class="badge bg-secondary">{{ total_count }}</span>
+    </h2>
+    <a href="{% url 'admin:assets_dataset_add' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Add New Dataset
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search datasets by name, description, or tags..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-success">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search_query %}
+            <p class="text-muted mb-0">
+                Found {{ total_count }} result{{ total_count|pluralize }} for "{{ search_query }}"
+                <a href="{% url 'frontend:dataset_list' %}" class="text-decoration-none">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Datasets List -->
+{% if page_obj %}
+    <div class="row">
+        {% for dataset in page_obj %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card asset-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <a href="{% url 'frontend:dataset_detail' dataset.id %}" class="text-decoration-none">
+                                    {{ dataset.name|truncatechars:30 }}
+                                </a>
+                            </h5>
+                            {% with score=dataset.calculate_quality_score %}
+                                {% if score >= 80 %}
+                                    <span class="quality-score quality-excellent">{{ score }}%</span>
+                                {% elif score >= 60 %}
+                                    <span class="quality-score quality-good">{{ score }}%</span>
+                                {% elif score >= 40 %}
+                                    <span class="quality-score quality-fair">{{ score }}%</span>
+                                {% else %}
+                                    <span class="quality-score quality-poor">{{ score }}%</span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <p class="card-text text-muted small mb-2">
+                            {{ dataset.description|truncatechars:100 }}
+                        </p>
+
+                        <div class="mb-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-muted small">Format</div>
+                                    <div class="fw-bold">{{ dataset.format|upper }}</div>
+                                </div>
+                                {% if dataset.num_records %}
+                                    <div class="col-4">
+                                        <div class="text-muted small">Records</div>
+                                        <div class="fw-bold">{{ dataset.num_records|floatformat:"0g" }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if dataset.num_features %}
+                                    <div class="col-4">
+                                        <div class="text-muted small">Features</div>
+                                        <div class="fw-bold">{{ dataset.num_features }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Privacy Level -->
+                        <div class="mb-2">
+                            <span class="badge
+                                {% if dataset.privacy_level == 'public' %}bg-success
+                                {% elif dataset.privacy_level == 'confidential' %}bg-warning
+                                {% else %}bg-danger{% endif %}">
+                                <i class="bi bi-shield"></i> {{ dataset.get_privacy_level_display }}
+                            </span>
+                            {% if dataset.total_size_bytes %}
+                                <span class="badge bg-info">{{ dataset.total_size_bytes|filesizeformat }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tags -->
+                        {% if dataset.tags %}
+                            <div class="mb-3">
+                                {% for tag in dataset.tags|slice:":3" %}
+                                    <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                                {% if dataset.tags|length > 3 %}
+                                    <span class="tag">+{{ dataset.tags|length|add:"-3" }} more</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Creator -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                by <a href="{% url 'frontend:researcher_detail' dataset.created_by.id %}" class="text-decoration-none">
+                                    {{ dataset.created_by.full_name }}
+                                </a>
+                            </small>
+                            <small class="text-muted">{{ dataset.created_at|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ dataset.get_visibility_display|lower }}
+                                {% if dataset.visibility == 'public' %}success
+                                {% elif dataset.visibility == 'restricted' %}warning
+                                {% else %}secondary{% endif %}">
+                                <i class="bi bi-eye"></i> {{ dataset.get_visibility_display }}
+                            </span>
+                            <span class="text-muted small">
+                                <i class="bi bi-building"></i> {{ dataset.organization.name|truncatechars:20 }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Datasets pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-table text-muted" style="font-size: 4rem;"></i>
+        <h4 class="text-muted mt-3">No datasets found</h4>
+        {% if search_query %}
+            <p class="text-muted">No datasets match your search criteria.</p>
+            <a href="{% url 'frontend:dataset_list' %}" class="btn btn-outline-success">
+                <i class="bi bi-arrow-left"></i> View All Datasets
+            </a>
+        {% else %}
+            <p class="text-muted">Get started by adding your first dataset to the repository.</p>
+            <a href="{% url 'admin:assets_dataset_add' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add First Dataset
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

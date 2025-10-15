@@ -1,0 +1,348 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}OpenModelsHub Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white rounded mb-4">
+            <h1 class="display-4">
+                <i class="bi bi-database"></i> OpenModelsHub
+            </h1>
+            <p class="lead">
+                Enhanced Machine Learning Repository with Computational Resource Tracking and Environmental Impact Assessment
+            </p>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
+            <p class="mb-4">
+                Demonstrating FAIR principles, seven-standard metadata integration (Dublin Core, DataCite, DCAT, Hugging Face, Croissant, MLflow, ISO 14067),
+                and comprehensive ML asset lifecycle management.
+            </p>
+            <a class="btn btn-light btn-lg" href="{% url 'frontend:search' %}" role="button">
+                <i class="bi bi-search"></i> Explore Assets
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_models }}</h4>
+                        <p class="card-text">ML Models</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-cpu fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'frontend:model_list' %}" class="btn btn-outline-light btn-sm">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_datasets }}</h4>
+                        <p class="card-text">Datasets</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-table fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'frontend:dataset_list' %}" class="btn btn-outline-light btn-sm">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_experiments }}</h4>
+                        <p class="card-text">Experiments</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-graph-up fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'frontend:experiment_list' %}" class="btn btn-outline-dark btn-sm">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_researchers }}</h4>
+                        <p class="card-text">Researchers</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'frontend:researcher_list' %}" class="btn btn-outline-light btn-sm">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-cpu"></i> Recent Models
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_models %}
+                    {% for model in recent_models %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{% url 'frontend:model_detail' model.id %}" class="text-decoration-none">
+                                        {{ model.name|truncatechars:25 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ model.framework|title }} • {{ model.created_at|timesince }} ago
+                                </small>
+                            </div>
+                            <div>
+                                {% with score=model.calculate_quality_score %}
+                                    {% if score >= 80 %}
+                                        <span class="quality-score quality-excellent">{{ score }}%</span>
+                                    {% elif score >= 60 %}
+                                        <span class="quality-score quality-good">{{ score }}%</span>
+                                    {% elif score >= 40 %}
+                                        <span class="quality-score quality-fair">{{ score }}%</span>
+                                    {% else %}
+                                        <span class="quality-score quality-poor">{{ score }}%</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No models yet. <a href="{% url 'admin:index' %}">Add some via admin</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-table"></i> Recent Datasets
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_datasets %}
+                    {% for dataset in recent_datasets %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{% url 'frontend:dataset_detail' dataset.id %}" class="text-decoration-none">
+                                        {{ dataset.name|truncatechars:25 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ dataset.format|upper }} •
+                                    {% if dataset.num_records %}{{ dataset.num_records|floatformat:"0g" }} records • {% endif %}
+                                    {{ dataset.created_at|timesince }} ago
+                                </small>
+                            </div>
+                            <div>
+                                {% with score=dataset.calculate_quality_score %}
+                                    {% if score >= 80 %}
+                                        <span class="quality-score quality-excellent">{{ score }}%</span>
+                                    {% elif score >= 60 %}
+                                        <span class="quality-score quality-good">{{ score }}%</span>
+                                    {% elif score >= 40 %}
+                                        <span class="quality-score quality-fair">{{ score }}%</span>
+                                    {% else %}
+                                        <span class="quality-score quality-poor">{{ score }}%</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No datasets yet. <a href="{% url 'admin:index' %}">Add some via admin</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i> Recent Experiments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_experiments %}
+                    {% for experiment in recent_experiments %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{% url 'frontend:experiment_detail' experiment.id %}" class="text-decoration-none">
+                                        {{ experiment.name|truncatechars:25 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ experiment.experiment_type|title }} •
+                                    <span class="badge badge-sm
+                                        {% if experiment.status == 'completed' %}bg-success
+                                        {% elif experiment.status == 'running' %}bg-primary
+                                        {% elif experiment.status == 'failed' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ experiment.get_status_display }}
+                                    </span>
+                                </small>
+                            </div>
+                            <div>
+                                {% with score=experiment.calculate_quality_score %}
+                                    {% if score >= 80 %}
+                                        <span class="quality-score quality-excellent">{{ score }}%</span>
+                                    {% elif score >= 60 %}
+                                        <span class="quality-score quality-good">{{ score }}%</span>
+                                    {% elif score >= 40 %}
+                                        <span class="quality-score quality-fair">{{ score }}%</span>
+                                    {% else %}
+                                        <span class="quality-score quality-poor">{{ score }}%</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No experiments yet. <a href="{% url 'admin:index' %}">Add some via admin</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Showcase -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3 class="mb-4">OpenModelsHub Key Features</h3>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-globe text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-center">Seven-Standard Metadata</h5>
+                <p class="card-text">
+                    Comprehensive metadata integration supporting Dublin Core, DataCite, DCAT, Hugging Face Cards,
+                    Croissant, MLflow, and ISO 14067 standards for maximum interoperability.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-leaf text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-center">Environmental Impact</h5>
+                <p class="card-text">
+                    Track carbon footprint, energy consumption, and sustainability metrics for all ML training
+                    and inference activities following ISO 14067 standards.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-shield-check text-info" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-center">Quality Assessment</h5>
+                <p class="card-text">
+                    Multi-dimensional quality evaluation with completeness, consistency, validity, and accuracy
+                    scoring to ensure data integrity and research reproducibility.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-diagram-3 text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-center">Provenance Tracking</h5>
+                <p class="card-text">
+                    Complete lineage tracking using PROV-O standards to maintain attribution chains
+                    and support reproducible research workflows.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-cpu text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-center">Resource Monitoring</h5>
+                <p class="card-text">
+                    Real-time computational resource utilization tracking with cost analysis and efficiency
+                    optimization for both local and cloud infrastructure.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-award text-secondary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title text-center">FAIR Principles</h5>
+                <p class="card-text">
+                    Ensuring ML assets are Findable, Accessible, Interoperable, and Reusable through
+                    standardized metadata and open science practices.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

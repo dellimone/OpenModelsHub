@@ -1,0 +1,351 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Environmental Impact Dashboard - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-globe2"></i> Environmental Impact Dashboard
+        <span class="badge bg-success">{{ total_impacts }} Records</span>
+    </h2>
+    <div>
+        <a href="{% url 'frontend:sustainability_report' %}" class="btn btn-success">
+            <i class="bi bi-file-earmark-text"></i> Sustainability Report
+        </a>
+    </div>
+</div>
+
+<!-- Key Environmental Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-cloud-slash text-danger" style="font-size: 2rem;"></i>
+                <div class="fs-4 fw-bold text-danger mt-2">{{ total_carbon }} kg</div>
+                <div class="text-muted">Total CO₂ Emissions</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-lightning text-warning" style="font-size: 2rem;"></i>
+                <div class="fs-4 fw-bold text-warning mt-2">{{ total_energy }} kWh</div>
+                <div class="text-muted">Total Energy Consumed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-speedometer text-info" style="font-size: 2rem;"></i>
+                <div class="fs-4 fw-bold text-info mt-2">{{ avg_carbon_intensity }}</div>
+                <div class="text-muted">Avg Carbon Intensity<br><small>(kg CO₂/kWh)</small></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-shield-check text-success" style="font-size: 2rem;"></i>
+                <div class="fs-4 fw-bold text-success mt-2">{{ total_impacts }}</div>
+                <div class="text-muted">Impact Assessments</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Impact Categories -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2 text-success">Low Impact</h5>
+                <div class="fs-3 fw-bold">{{ low_impact_count }}</div>
+                <small class="text-muted">&lt; 1.0 kg CO₂</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2 text-warning">Medium Impact</h5>
+                <div class="fs-3 fw-bold">{{ medium_impact_count }}</div>
+                <small class="text-muted">1.0 - 5.0 kg CO₂</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2 text-danger">High Impact</h5>
+                <div class="fs-3 fw-bold">{{ high_impact_count }}</div>
+                <small class="text-muted">&gt; 5.0 kg CO₂</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Impact by Resource Type -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Environmental Impact by Resource Type</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <h6><i class="bi bi-cloud text-primary"></i> Cloud Resources</h6>
+                        <div class="mb-2">
+                            <span class="fs-5 fw-bold text-danger">{{ cloud_impact.carbon }} kg CO₂</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="fs-6 fw-bold text-warning">{{ cloud_impact.energy }} kWh</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-primary"
+                                 style="width: {% if total_carbon > 0 %}{% widthratio cloud_impact.carbon total_carbon 100 %}{% else %}0{% endif %}%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6><i class="bi bi-laptop text-success"></i> Local Resources</h6>
+                        <div class="mb-2">
+                            <span class="fs-5 fw-bold text-danger">{{ local_impact.carbon }} kg CO₂</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="fs-6 fw-bold text-warning">{{ local_impact.energy }} kWh</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success"
+                                 style="width: {% if total_carbon > 0 %}{% widthratio local_impact.carbon total_carbon 100 %}{% else %}0{% endif %}%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6><i class="bi bi-hdd-stack text-info"></i> HPC Clusters</h6>
+                        <div class="mb-2">
+                            <span class="fs-5 fw-bold text-danger">{{ hpc_impact.carbon }} kg CO₂</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="fs-6 fw-bold text-warning">{{ hpc_impact.energy }} kWh</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-info"
+                                 style="width: {% if total_carbon > 0 %}{% widthratio hpc_impact.carbon total_carbon 100 %}{% else %}0{% endif %}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Models with Highest Environmental Impact -->
+{% if models_impact %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-cpu"></i> Models with Highest Environmental Impact</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Total CO₂ (kg)</th>
+                                    <th>Total Energy (kWh)</th>
+                                    <th>Carbon Efficiency</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model in models_impact %}
+                                    <tr>
+                                        <td>
+                                            {% if model.resource_utilization__model__id %}
+                                                <a href="{% url 'frontend:model_detail' model.resource_utilization__model__id %}" class="text-decoration-none">
+                                                    {{ model.resource_utilization__model__name|truncatechars:30 }}
+                                                </a>
+                                            {% else %}
+                                                {{ model.resource_utilization__model__name|truncatechars:30 }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold {% if model.total_carbon >= 5 %}text-danger{% elif model.total_carbon >= 1 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ model.total_carbon|floatformat:2 }}
+                                            </span>
+                                        </td>
+                                        <td>{{ model.total_energy|floatformat:2 }}</td>
+                                        <td>
+                                            {% if model.total_energy > 0 %}
+                                                {{ model.total_carbon|div:model.total_energy|floatformat:4 }} kg/kWh
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if model.total_carbon >= 5 %}
+                                                <span class="badge bg-danger">High Impact</span>
+                                            {% elif model.total_carbon >= 1 %}
+                                                <span class="badge bg-warning">Medium Impact</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Low Impact</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- High-Impact Activities -->
+{% if high_impact %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle text-danger"></i> High-Impact Activities
+                        <span class="badge bg-danger">≥ 5.0 kg CO₂</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for impact in high_impact %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div>
+                                <h6 class="mb-1">
+                                    {% if impact.resource_utilization.model %}
+                                        <i class="bi bi-cpu"></i>
+                                        <a href="{% url 'frontend:model_detail' impact.resource_utilization.model.id %}" class="text-decoration-none">
+                                            {{ impact.resource_utilization.model.name }}
+                                        </a>
+                                    {% elif impact.resource_utilization.experiment %}
+                                        <i class="bi bi-graph-up"></i>
+                                        <a href="{% url 'frontend:experiment_detail' impact.resource_utilization.experiment.id %}" class="text-decoration-none">
+                                            {{ impact.resource_utilization.experiment.name }}
+                                        </a>
+                                    {% else %}
+                                        <i class="bi bi-activity"></i> Resource Utilization
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-servers"></i>
+                                    <a href="{% url 'frontend:resource_detail' impact.resource_utilization.resource.id %}" class="text-decoration-none">
+                                        {{ impact.resource_utilization.resource.name }}
+                                    </a>
+                                    • {{ impact.created_at|timesince }} ago
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-5 fw-bold text-danger">{{ impact.carbon_footprint_kg }} kg CO₂</div>
+                                <div class="fs-6 text-warning">{{ impact.energy_consumption_kwh }} kWh</div>
+                                {% if impact.carbon_intensity_kg_co2_kwh %}
+                                    <small class="text-muted">{{ impact.carbon_intensity_kg_co2_kwh|floatformat:4 }} kg/kWh</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Recent Environmental Impacts -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Environmental Impacts</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_impacts %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Resource</th>
+                                    <th>Model/Experiment</th>
+                                    <th>CO₂ (kg)</th>
+                                    <th>Energy (kWh)</th>
+                                    <th>Intensity</th>
+                                    <th>Impact Level</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for impact in recent_impacts %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'frontend:resource_detail' impact.resource_utilization.resource.id %}" class="text-decoration-none">
+                                                {{ impact.resource_utilization.resource.name|truncatechars:20 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            {% if impact.resource_utilization.model %}
+                                                <a href="{% url 'frontend:model_detail' impact.resource_utilization.model.id %}" class="text-decoration-none">
+                                                    <i class="bi bi-cpu"></i> {{ impact.resource_utilization.model.name|truncatechars:20 }}
+                                                </a>
+                                            {% elif impact.resource_utilization.experiment %}
+                                                <a href="{% url 'frontend:experiment_detail' impact.resource_utilization.experiment.id %}" class="text-decoration-none">
+                                                    <i class="bi bi-graph-up"></i> {{ impact.resource_utilization.experiment.name|truncatechars:20 }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold {% if impact.carbon_footprint_kg >= 5 %}text-danger{% elif impact.carbon_footprint_kg >= 1 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ impact.carbon_footprint_kg }}
+                                            </span>
+                                        </td>
+                                        <td>{{ impact.energy_consumption_kwh }}</td>
+                                        <td>
+                                            {% if impact.carbon_intensity_kg_co2_kwh %}
+                                                {{ impact.carbon_intensity_kg_co2_kwh|floatformat:4 }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if impact.carbon_footprint_kg >= 5 %}
+                                                <span class="badge bg-danger">High</span>
+                                            {% elif impact.carbon_footprint_kg >= 1 %}
+                                                <span class="badge bg-warning">Medium</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ impact.created_at|timesince }} ago</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-globe2 text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">No Environmental Impact Data</h5>
+                        <p class="text-muted">Environmental impact tracking will appear here as models and experiments are run.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,340 @@
+%%{init:
+    {
+        'theme':'base',
+        'themeVariables': {
+            'fontFamily': 'Helvetica',
+            'fontSize': '18px',
+            'primaryColor': '#6a88ff0a',
+            'primaryTextColor': '#292929ff'
+        }
+    }
+}%%
+erDiagram
+    %% Core ML Asset Tables (Django Abstract Base Pattern)
+    model {
+        uuid id PK
+        string persistent_identifier UK
+        string name
+        text description
+        string version
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by_id FK
+        uuid organization_id FK
+        uuid parent_version_id FK
+        text version_notes
+        string license
+        json subjects
+        string access_rights
+        string checksum
+        string checksum_algorithm
+        string model_file_path
+        bigint model_file_size
+        string model_format
+        string architecture
+        string framework
+        string framework_version
+        string model_type
+        json input_schema
+        json output_schema
+        float inference_time_ms
+        integer model_size_mb
+        uuid produced_by_experiment_id FK
+    }
+
+    dataset {
+        uuid id PK
+        string persistent_identifier UK
+        string name
+        text description
+        string version
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by_id FK
+        uuid organization_id FK
+        uuid parent_version_id FK
+        text version_notes
+        string license
+        json subjects
+        string access_rights
+        string checksum
+        string checksum_algorithm
+        json file_paths
+        bigint total_size_bytes
+        string format
+        json schema
+        bigint num_records
+        integer num_features
+        string target_column
+        json data_types
+        json missing_values_count
+        json categorical_columns
+        json numerical_columns
+        string privacy_level
+        string collection_method
+        string sampling_strategy
+        text ethical_considerations
+    }
+
+    experiment {
+        uuid id PK
+        string persistent_identifier UK
+        string name
+        text description
+        string version
+        timestamp created_at
+        timestamp updated_at
+        uuid created_by_id FK
+        uuid organization_id FK
+        uuid parent_version_id FK
+        text version_notes
+        string license
+        json subjects
+        string access_rights
+        string checksum
+        string checksum_algorithm
+        string experiment_type
+        string status
+        timestamp start_time
+        timestamp end_time
+        integer duration_seconds
+        json config_parameters
+        integer random_seed
+        string reproducibility_hash
+        string code_repository_url
+        string commit_hash
+        json environment_specification
+        uuid base_model_id FK
+    }
+
+    %% Experiment Support Tables
+    hyperparameter {
+        uuid id PK
+        uuid experiment_id FK
+        string parameter_name
+        string parameter_value
+        string parameter_type
+        integer display_order
+        boolean is_tunable
+    }
+
+    experiment_metric {
+        uuid id PK
+        uuid experiment_id FK
+        string metric_name
+        integer step
+        timestamp timestamp
+        float value
+        string metric_type
+    }
+
+    checkpoint {
+        uuid id PK
+        uuid experiment_id FK
+        uuid model_id FK
+        string checkpoint_name
+        integer step
+        timestamp saved_at
+        string file_path
+        bigint file_size_bytes
+        string checksum
+        string checksum_algorithm
+        json metrics_snapshot
+        boolean is_best
+        boolean is_final
+        text notes
+    }
+
+    %% Resource Management Tables
+    computational_resource {
+        uuid id PK
+        string name
+        string resource_type
+        string location
+        string availability
+        integer cpu_cores
+        integer memory_gb
+        integer gpu_count
+        string gpu_model
+        string pricing_model
+        decimal cost_per_hour
+        string currency
+        float energy_efficiency
+        float carbon_intensity
+    }
+
+    local_resource {
+        uuid id PK "FK to computational_resource"
+        string hostname UK
+        json mac_addresses
+        string local_ip_address
+        integer power_consumption_watts
+        string cooling_type
+        string chassis_type
+        string rack_location
+        string asset_tag
+    }
+
+    cloud_resource {
+        uuid id PK "FK to computational_resource"
+        string cloud_provider
+        string provider_region
+        string availability_zone
+        string account_id
+        string instance_type
+        string instance_family
+        string virtualization_type
+        string tenancy
+        string pricing_model
+        decimal spot_price
+        boolean auto_scaling_enabled
+        integer min_instances
+        integer max_instances
+    }
+
+    hpc_resource {
+        uuid id PK "FK to computational_resource"
+        string cluster_name
+        integer total_nodes
+        json node_configuration
+        string scheduler_type
+        string scheduler_version
+        json partition_names
+        json queue_limits
+        string allocation_policy
+        integer max_job_duration
+        string interconnect_type
+        string parallel_filesystem
+    }
+
+    resource_utilization {
+        uuid id PK
+        uuid resource_id FK
+        uuid experiment_id FK
+        timestamp start_time
+        timestamp end_time
+        integer duration_seconds
+        float cpu_utilization_percent
+        float gpu_utilization_percent
+        float memory_usage_gb
+        float storage_usage_gb
+        float network_io_gb
+        decimal compute_cost
+        decimal storage_cost
+        decimal network_cost
+        decimal total_cost
+        string currency
+        float carbon_footprint_kg
+        float carbon_footprint_lower
+        float carbon_footprint_upper
+        float energy_consumption_kwh
+        float water_usage_liters
+        string carbon_intensity_location
+        float carbon_intensity_value
+        json peak_usage_metrics
+        json average_usage_metrics
+    }
+
+    %% Research Context Tables
+    researcher {
+        uuid id PK
+        string first_name
+        string last_name
+        string email UK
+        string orcid_id UK
+        json expertise_areas
+        json research_interests
+    }
+
+    organization {
+        uuid id PK
+        string name UK
+        string type
+        string location
+        string website
+        json policies
+    }
+
+    %% Association Tables
+    experiment_dataset {
+        uuid id PK
+        uuid experiment_id FK
+        uuid dataset_id FK
+        string role
+        float split_percentage
+        integer num_records
+        string indices_file_path
+        integer random_seed
+        json preprocessing_applied
+        boolean augmentation_enabled
+    }
+
+    organization_affiliation {
+        uuid id PK
+        uuid researcher_id FK
+        uuid organization_id FK
+        string role
+        date start_date
+        date end_date
+        boolean is_primary
+    }
+
+    resource_allocation {
+        uuid id PK
+        uuid organization_id FK
+        uuid resource_id FK
+        float quota_hours
+        float cost_allocation_percent
+        integer access_priority
+        date start_date
+        date end_date
+    }
+
+    %% Key Relationships (Django Implementation)
+
+    %% Django Abstract Base Class Pattern - Each model contains all MLAsset fields
+    researcher ||--|{ model : "created_by"
+    researcher ||--|{ dataset : "created_by"
+    researcher ||--|{ experiment : "created_by"
+
+    organization ||--|{ model : "owned_by"
+    organization ||--|{ dataset : "owned_by"
+    organization ||--|{ experiment : "owned_by"
+
+    %% Versioning (Simple Parent-Child)
+    model ||--o{ model : "parent_version"
+    dataset ||--o{ dataset : "parent_version"
+    experiment ||--o{ experiment : "parent_version"
+
+    %% Multi-table Inheritance for Resources
+    computational_resource ||--|| local_resource : "specializes"
+    computational_resource ||--|| cloud_resource : "specializes"
+    computational_resource ||--|| hpc_resource : "specializes"
+
+    %% Training Flow
+    experiment ||--o| model : "uses_base_model"
+    model }o--|| experiment : "produced_by"
+
+    %% Experiment-Dataset Relationship via ExperimentDataset
+    experiment ||--|{ experiment_dataset : "uses"
+    dataset ||--o{ experiment_dataset : "used_by"
+
+    %% Experiment Support Relationships
+    experiment ||--|{ hyperparameter : "has_parameters"
+    experiment ||--|{ experiment_metric : "logs_metrics"
+    experiment ||--o{ checkpoint : "saves_checkpoints"
+
+    %% Checkpoint to Model
+    model ||--o| checkpoint : "promoted_from"
+
+    %% Resource Usage Chain (Consolidated)
+    experiment ||--|{ resource_utilization : "consumes"
+    computational_resource ||--o{ resource_utilization : "provides"
+
+    %% Resource Allocation (M:M between Organization and ComputationalResource)
+    organization ||--o{ resource_allocation : "allocates"
+    computational_resource ||--o{ resource_allocation : "allocated_to"
+
+    %% Research Context
+    researcher ||--o{ organization_affiliation : "affiliated_via"
+    organization ||--o{ organization_affiliation : "employs_via"

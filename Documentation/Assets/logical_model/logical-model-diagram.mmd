@@ -1,0 +1,292 @@
+%%{init:
+    {
+        'theme':'base',
+        'themeVariables': {
+            'fontFamily': 'Helvetica',
+            'fontSize': '18px',
+            'primaryColor': '#6a88ff0a',
+            'primaryTextColor': '#292929ff'
+        }
+    }
+}%%
+classDiagram
+    %% Abstract Base Class
+    class MLAsset {
+        <<abstract>>
+        + _UUID_ id
+        + _String_ persistent_identifier
+        + String name
+        + String description
+        + String version
+        + DateTime created_at
+        + DateTime updated_at
+        + UUID parent_version
+        + Text version_notes
+        + String license
+        + List~String~ subjects
+        + AccessRights access_rights
+        + String checksum
+        + String checksum_algorithm
+    }
+
+    %% Core ML Asset Classes
+    class Model {
+        + String model_file_path
+        + Integer model_file_size
+        + String model_format
+        + String architecture
+        + String framework
+        + String framework_version
+        + String model_type
+        + JSON input_schema
+        + JSON output_schema
+        + Float inference_time_ms
+        + Integer model_size_mb
+        + UUID produced_by_experiment
+    }
+
+    class Dataset {
+        + List~String~ file_paths
+        + Integer total_size_bytes
+        + String format
+        + JSON schema
+        + Integer num_records
+        + Integer num_features
+        + String target_column
+        + JSON data_types
+        + JSON missing_values_count
+        + List~String~ categorical_columns
+        + List~String~ numerical_columns
+        + String privacy_level
+        + String collection_method
+        + String sampling_strategy
+        + Text ethical_considerations
+    }
+
+    class Experiment {
+        + String experiment_type
+        + String status
+        + DateTime start_time
+        + DateTime end_time
+        + Integer duration_seconds
+        + JSON config_parameters
+        + Integer random_seed
+        + String reproducibility_hash
+        + String code_repository_url
+        + String commit_hash
+        + JSON environment_specification
+        + UUID base_model_id
+    }
+
+    %% Experiment Support Entities
+    class Hyperparameter {
+        + UUID id
+        + UUID experiment
+        + String parameter_name
+        + String parameter_value
+        + String parameter_type
+        + Integer display_order
+        + Boolean is_tunable
+    }
+
+    class ExperimentMetric {
+        + UUID id
+        + UUID experiment
+        + String metric_name
+        + Integer step
+        + DateTime timestamp
+        + Float value
+        + String metric_type
+    }
+
+    class Checkpoint {
+        + UUID id
+        + UUID experiment
+        + UUID model
+        + String checkpoint_name
+        + Integer step
+        + DateTime saved_at
+        + String file_path
+        + Integer file_size_bytes
+        + String checksum
+        + String checksum_algorithm
+        + JSON metrics_snapshot
+        + Boolean is_best
+        + Boolean is_final
+        + Text notes
+    }
+
+    %% Resource Management Classes
+    class ComputationalResource {
+        <<abstract>>
+        + String name
+        + String resource_type
+        + String location
+        + String availability
+        + Integer cpu_cores
+        + Integer memory_gb
+        + Integer gpu_count
+        + String gpu_model
+        + String pricing_model
+        + Decimal cost_per_hour
+        + String currency
+        + Float energy_efficiency
+        + Float carbon_intensity
+    }
+
+    class LocalResource {
+        + String hostname
+        + List~String~ mac_addresses
+        + String local_ip_address
+        + Integer power_consumption_watts
+        + String cooling_type
+        + String chassis_type
+        + String rack_location
+        + String asset_tag
+    }
+
+    class CloudResource {
+        + String cloud_provider
+        + String provider_region
+        + String availability_zone
+        + String account_id
+        + String instance_type
+        + String instance_family
+        + String virtualization_type
+        + String tenancy
+        + String pricing_model
+        + Decimal spot_price
+        + Boolean auto_scaling_enabled
+        + Integer min_instances
+        + Integer max_instances
+    }
+
+    class HPCResource {
+        + String cluster_name
+        + Integer total_nodes
+        + JSON node_configuration
+        + String scheduler_type
+        + String scheduler_version
+        + List~String~ partition_names
+        + JSON queue_limits
+        + String allocation_policy
+        + Integer max_job_duration
+        + String interconnect_type
+        + String parallel_filesystem
+    }
+
+    class ResourceUtilization {
+        + DateTime start_time
+        + DateTime end_time
+        + Integer duration_seconds
+        + Float cpu_utilization_percent
+        + Float gpu_utilization_percent
+        + Float memory_usage_gb
+        + Float storage_usage_gb
+        + Float network_io_gb
+        + Decimal compute_cost
+        + Decimal storage_cost
+        + Decimal network_cost
+        + Decimal total_cost
+        + String currency
+        + Float carbon_footprint_kg
+        + Float carbon_footprint_lower
+        + Float carbon_footprint_upper
+        + Float energy_consumption_kwh
+        + Float water_usage_liters
+        + String carbon_intensity_location
+        + Float carbon_intensity_value
+        + JSON peak_usage_metrics
+        + JSON average_usage_metrics
+    }
+
+    %% Research Context Classes
+    class Researcher {
+        + String first_name
+        + String last_name
+        + String email
+        + String orcid_id
+        + List~String~ expertise_areas
+        + List~String~ research_interests
+    }
+
+    class Organization {
+        + String name
+        + String type
+        + String location
+        + String website
+        + List~String~ policies
+    }
+
+    %% Association Classes
+    class ExperimentDataset {
+        + UUID experiment
+        + UUID dataset
+        + String role
+        + Float split_percentage
+        + Integer num_records
+        + String indices_file_path
+        + Integer random_seed
+        + JSON preprocessing_applied
+        + Boolean augmentation_enabled
+    }
+
+    class OrganizationAffiliation {
+        + String role
+        + Date start_date
+        + Date end_date
+        + Boolean is_primary
+    }
+
+    class ResourceAllocation {
+        + UUID organization
+        + UUID resource
+        + Float quota_hours
+        + Float cost_allocation_percent
+        + Integer access_priority
+        + Date start_date
+        + Date end_date
+    }
+
+    %% Inheritance Relationships
+    MLAsset <|-- Model : extends
+    MLAsset <|-- Dataset : extends
+    MLAsset <|-- Experiment : extends
+    ComputationalResource <|-- LocalResource : extends
+    ComputationalResource <|-- CloudResource : extends
+    ComputationalResource <|-- HPCResource : extends
+
+    %% Core Relationships
+    Researcher "1" --> "*" MLAsset : creates
+    Organization "1" --> "*" MLAsset : owns
+
+    %% Versioning (Simple Parent-Child)
+    MLAsset "0..1" --> "*" MLAsset : parent_of
+
+    %% Training Flow
+    Experiment "*" --> "0..1" Model : uses_base_model
+    Experiment "1" --> "*" Model : produces
+
+    %% Experiment-Dataset Relationship
+    Experiment "1" --> "*" ExperimentDataset : uses
+    Dataset "1" --> "*" ExperimentDataset : used_by
+
+    %% Experiment Tracking
+    Experiment "1" --> "*" Hyperparameter : has
+    Experiment "1" --> "*" ExperimentMetric : logs
+    Experiment "1" --> "*" Checkpoint : saves
+
+    %% Checkpoint to Model
+    Checkpoint "0..1" --> "0..1" Model : becomes
+
+    %% Resource Usage
+    Experiment "1" --> "*" ResourceUtilization : consumes
+    ComputationalResource "1" --> "*" ResourceUtilization : provides
+
+    %% Resource Allocation
+    Organization "1" --> "*" ResourceAllocation : allocates
+    ComputationalResource "1" --> "*" ResourceAllocation : allocated_to
+
+    %% Research Context
+    Researcher "1" --> "*" OrganizationAffiliation : affiliated_via
+    Organization "1" --> "*" OrganizationAffiliation : employs_via

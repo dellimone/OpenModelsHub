@@ -1,0 +1,210 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}ML Models - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-cpu"></i> ML Models
+        <span class="badge bg-secondary">{{ total_count }}</span>
+    </h2>
+    <a href="{% url 'admin:assets_model_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add New Model
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search models by name, description, or tags..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search_query %}
+            <p class="text-muted mb-0">
+                Found {{ total_count }} result{{ total_count|pluralize }} for "{{ search_query }}"
+                <a href="{% url 'frontend:model_list' %}" class="text-decoration-none">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Models List -->
+{% if page_obj %}
+    <div class="row">
+        {% for model in page_obj %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card asset-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <a href="{% url 'frontend:model_detail' model.id %}" class="text-decoration-none">
+                                    {{ model.name|truncatechars:30 }}
+                                </a>
+                            </h5>
+                            {% with score=model.calculate_quality_score %}
+                                {% if score >= 80 %}
+                                    <span class="quality-score quality-excellent">{{ score }}%</span>
+                                {% elif score >= 60 %}
+                                    <span class="quality-score quality-good">{{ score }}%</span>
+                                {% elif score >= 40 %}
+                                    <span class="quality-score quality-fair">{{ score }}%</span>
+                                {% else %}
+                                    <span class="quality-score quality-poor">{{ score }}%</span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <p class="card-text text-muted small mb-2">
+                            {{ model.description|truncatechars:100 }}
+                        </p>
+
+                        <div class="mb-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-muted small">Framework</div>
+                                    <div class="fw-bold">{{ model.get_framework_display }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-muted small">Type</div>
+                                    <div class="fw-bold">{{ model.get_model_type_display|truncatechars:12 }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-muted small">Version</div>
+                                    <div class="fw-bold">{{ model.version }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        {% if model.tags %}
+                            <div class="mb-3">
+                                {% for tag in model.tags|slice:":3" %}
+                                    <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                                {% if model.tags|length > 3 %}
+                                    <span class="tag">+{{ model.tags|length|add:"-3" }} more</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Creator and Organization -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                by <a href="{% url 'frontend:researcher_detail' model.created_by.id %}" class="text-decoration-none">
+                                    {{ model.created_by.full_name }}
+                                </a>
+                            </small>
+                            <small class="text-muted">{{ model.created_at|timesince }} ago</small>
+                        </div>
+
+                        <!-- Performance Indicators -->
+                        {% if model.inference_time_ms or model.model_size_mb %}
+                            <div class="row mt-2 text-center">
+                                {% if model.inference_time_ms %}
+                                    <div class="col-6">
+                                        <div class="text-muted small">Inference</div>
+                                        <div class="small fw-bold">{{ model.inference_time_ms }} ms</div>
+                                    </div>
+                                {% endif %}
+                                {% if model.model_size_mb %}
+                                    <div class="col-6">
+                                        <div class="text-muted small">Size</div>
+                                        <div class="small fw-bold">{{ model.model_size_mb }} MB</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ model.get_visibility_display|lower }}
+                                {% if model.visibility == 'public' %}success
+                                {% elif model.visibility == 'restricted' %}warning
+                                {% else %}secondary{% endif %}">
+                                <i class="bi bi-eye"></i> {{ model.get_visibility_display }}
+                            </span>
+                            <span class="text-muted small">
+                                <i class="bi bi-building"></i> {{ model.organization.name|truncatechars:20 }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Models pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <div class="text-center text-muted">
+            Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} models
+        </div>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-cpu-fill text-muted" style="font-size: 4rem;"></i>
+        <h4 class="text-muted mt-3">No models found</h4>
+        {% if search_query %}
+            <p class="text-muted">No models match your search criteria.</p>
+            <a href="{% url 'frontend:model_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> View All Models
+            </a>
+        {% else %}
+            <p class="text-muted">Get started by adding your first ML model to the repository.</p>
+            <a href="{% url 'admin:assets_model_add' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add First Model
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

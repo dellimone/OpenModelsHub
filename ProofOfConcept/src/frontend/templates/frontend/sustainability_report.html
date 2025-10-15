@@ -1,0 +1,420 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Sustainability Report - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-leaf"></i> Sustainability Report
+        <span class="badge bg-success">Last 30 Days</span>
+    </h2>
+    <div>
+        <a href="{% url 'frontend:environmental_dashboard' %}" class="btn btn-outline-success">
+            <i class="bi bi-globe2"></i> Environmental Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Executive Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Executive Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="border-end">
+                            <div class="fs-2 fw-bold text-danger">{{ monthly_carbon }} kg</div>
+                            <div class="text-muted">Total CO₂ Emissions</div>
+                            <small class="text-muted">Last 30 days</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border-end">
+                            <div class="fs-2 fw-bold text-warning">{{ monthly_energy }} kWh</div>
+                            <div class="text-muted">Energy Consumed</div>
+                            <small class="text-muted">Last 30 days</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border-end">
+                            <div class="fs-2 fw-bold text-info">{{ monthly_models }}</div>
+                            <div class="text-muted">Models Trained</div>
+                            <small class="text-muted">Last 30 days</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="fs-2 fw-bold text-success">{{ compliance_rate }}%</div>
+                        <div class="text-muted">ISO 14067 Compliant</div>
+                        <small class="text-muted">≤ 5kg CO₂ per training</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Efficiency Metrics -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calculator"></i> Carbon Efficiency</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="fs-3 fw-bold text-primary">{{ avg_carbon_per_model }} kg CO₂</div>
+                    <div class="text-muted">Average per Model Training</div>
+                </div>
+                <div class="progress mb-2" style="height: 20px;">
+                    <div class="progress-bar
+                        {% if avg_carbon_per_model <= 1 %}bg-success
+                        {% elif avg_carbon_per_model <= 5 %}bg-warning
+                        {% else %}bg-danger{% endif %}"
+                         style="width: {% if avg_carbon_per_model <= 10 %}{% widthratio avg_carbon_per_model 10 100 %}{% else %}100{% endif %}%">
+                        {{ avg_carbon_per_model }} kg CO₂
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between text-small">
+                    <span class="text-success">Excellent ≤1kg</span>
+                    <span class="text-warning">Good ≤5kg</span>
+                    <span class="text-danger">High >5kg</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Energy Efficiency</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="fs-3 fw-bold text-warning">{{ avg_energy_per_model }} kWh</div>
+                    <div class="text-muted">Average per Model Training</div>
+                </div>
+                <div class="progress mb-2" style="height: 20px;">
+                    <div class="progress-bar bg-warning"
+                         style="width: {% if avg_energy_per_model <= 50 %}{% widthratio avg_energy_per_model 50 100 %}{% else %}100{% endif %}%">
+                        {{ avg_energy_per_model }} kWh
+                    </div>
+                </div>
+                <small class="text-muted">Energy consumption per training session</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Compliance & Standards -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield-check"></i> ISO 14067 Compliance Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Compliance Overview</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Compliant Activities (≤ 5kg CO₂)</span>
+                                <span class="fw-bold text-success">{{ iso_compliant_count }}</span>
+                            </div>
+                            <div class="progress mb-1" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: {{ compliance_rate }}%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Non-Compliant Activities (> 5kg CO₂)</span>
+                                <span class="fw-bold text-danger">{{ total_recent_impacts|add:iso_compliant_count|sub:iso_compliant_count }}</span>
+                            </div>
+                            <div class="progress mb-1" style="height: 6px;">
+                                <div class="progress-bar bg-danger" style="width: {% widthratio total_recent_impacts|add:iso_compliant_count|sub:iso_compliant_count total_recent_impacts 100 %}%"></div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="fs-4 fw-bold {% if compliance_rate >= 80 %}text-success{% elif compliance_rate >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ compliance_rate }}%
+                            </div>
+                            <div class="text-muted">Overall Compliance Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>ISO 14067 Standards</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle {% if compliance_rate >= 80 %}text-success{% else %}text-muted{% endif %}"></i>
+                                Carbon footprint quantification
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle {% if avg_carbon_per_model <= 5 %}text-success{% else %}text-muted{% endif %}"></i>
+                                Lifecycle greenhouse gas emissions
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle {% if renewable_percentage >= 50 %}text-success{% else %}text-muted{% endif %}"></i>
+                                Renewable energy usage: {{ renewable_percentage }}%
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Environmental impact assessment
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Green Computing Metrics -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-arrow-repeat text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Renewable Energy</h5>
+                <div class="fs-3 fw-bold text-success">{{ renewable_percentage }}%</div>
+                <p class="card-text">of computing powered by renewable sources</p>
+                <div class="progress">
+                    <div class="progress-bar bg-success" style="width: {{ renewable_percentage }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-cpu text-info" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Resource Efficiency</h5>
+                <div class="fs-3 fw-bold text-info">{{ efficient_resources|length }}</div>
+                <p class="card-text">highly efficient resources identified</p>
+                <small class="text-muted">Based on carbon intensity</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up text-primary" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Impact Tracking</h5>
+                <div class="fs-3 fw-bold text-primary">{{ total_recent_impacts }}</div>
+                <p class="card-text">environmental assessments completed</p>
+                <small class="text-muted">Last 30 days</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Most Efficient Resources -->
+{% if efficient_resources %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-award"></i> Most Efficient Computational Resources</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Resources with the lowest average carbon footprint per utilization.</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Resource</th>
+                                    <th>Type</th>
+                                    <th>Location</th>
+                                    <th>Avg Carbon Impact</th>
+                                    <th>Usage Count</th>
+                                    <th>Energy Source</th>
+                                    <th>Efficiency Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in efficient_resources %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'frontend:resource_detail' resource.id %}" class="text-decoration-none">
+                                                {{ resource.name|truncatechars:25 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {% if resource.resource_type == 'cloud' %}bg-primary
+                                                {% elif resource.resource_type == 'local' %}bg-success
+                                                {% else %}bg-info{% endif %}">
+                                                {{ resource.get_resource_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ resource.location|truncatechars:20 }}</td>
+                                        <td>
+                                            <span class="fw-bold {% if resource.avg_carbon <= 1 %}text-success{% elif resource.avg_carbon <= 3 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ resource.avg_carbon|floatformat:2 }} kg CO₂
+                                            </span>
+                                        </td>
+                                        <td>{{ resource.usage_count }}</td>
+                                        <td>
+                                            {% if resource.energy_source %}
+                                                <span class="badge {% if resource.energy_source == 'renewable' %}bg-success{% else %}bg-warning{% endif %}">
+                                                    {{ resource.get_energy_source_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if resource.avg_carbon <= 1 %}
+                                                <i class="bi bi-star-fill text-success"></i>
+                                                <i class="bi bi-star-fill text-success"></i>
+                                                <i class="bi bi-star-fill text-success"></i>
+                                                <span class="text-success small">Excellent</span>
+                                            {% elif resource.avg_carbon <= 3 %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <i class="bi bi-star text-muted"></i>
+                                                <span class="text-warning small">Good</span>
+                                            {% else %}
+                                                <i class="bi bi-star-fill text-danger"></i>
+                                                <i class="bi bi-star text-muted"></i>
+                                                <i class="bi bi-star text-muted"></i>
+                                                <span class="text-danger small">Fair</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Organization Sustainability Rankings -->
+{% if org_sustainability %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-building"></i> Organization Sustainability Rankings</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Organizations ranked by total carbon footprint (lower is better).</p>
+                    <div class="row">
+                        {% for org in org_sustainability %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">{{ org.name|truncatechars:30 }}</h6>
+                                                <small class="text-muted">{{ org.model_count }} models</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold {% if org.total_carbon <= 10 %}text-success{% elif org.total_carbon <= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                                    {{ org.total_carbon|floatformat:2 }} kg CO₂
+                                                </div>
+                                                <small class="text-muted">total footprint</small>
+                                            </div>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 6px;">
+                                            <div class="progress-bar {% if org.total_carbon <= 10 %}bg-success{% elif org.total_carbon <= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                 style="width: {% if org.total_carbon <= 100 %}{% widthratio org.total_carbon 100 100 %}{% else %}100{% endif %}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Recommendations -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Sustainability Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="bi bi-check-circle"></i> Best Practices</h6>
+                        <ul class="list-unstyled">
+                            {% if renewable_percentage >= 70 %}
+                                <li class="mb-2"><i class="bi bi-check text-success"></i> Excellent renewable energy usage ({{ renewable_percentage }}%)</li>
+                            {% endif %}
+                            {% if compliance_rate >= 80 %}
+                                <li class="mb-2"><i class="bi bi-check text-success"></i> High ISO 14067 compliance rate ({{ compliance_rate }}%)</li>
+                            {% endif %}
+                            {% if avg_carbon_per_model <= 2 %}
+                                <li class="mb-2"><i class="bi bi-check text-success"></i> Low average carbon footprint per model</li>
+                            {% endif %}
+                            <li class="mb-2"><i class="bi bi-check text-success"></i> Comprehensive environmental impact tracking</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning"><i class="bi bi-exclamation-triangle"></i> Improvement Areas</h6>
+                        <ul class="list-unstyled">
+                            {% if renewable_percentage < 50 %}
+                                <li class="mb-2"><i class="bi bi-arrow-up text-warning"></i> Increase renewable energy usage (currently {{ renewable_percentage }}%)</li>
+                            {% endif %}
+                            {% if compliance_rate < 80 %}
+                                <li class="mb-2"><i class="bi bi-arrow-up text-warning"></i> Improve ISO 14067 compliance (currently {{ compliance_rate }}%)</li>
+                            {% endif %}
+                            {% if avg_carbon_per_model > 5 %}
+                                <li class="mb-2"><i class="bi bi-arrow-down text-warning"></i> Reduce carbon footprint per model training</li>
+                            {% endif %}
+                            <li class="mb-2"><i class="bi bi-arrow-up text-warning"></i> Consider carbon offset programs</li>
+                            <li class="mb-2"><i class="bi bi-arrow-up text-warning"></i> Optimize model architectures for efficiency</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Items -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> Recommended Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="bi bi-arrow-repeat text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Increase Renewable Energy</h6>
+                            <p class="small text-muted">Migrate workloads to cloud regions with higher renewable energy percentages</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="bi bi-cpu text-info" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Optimize Resources</h6>
+                            <p class="small text-muted">Use the most efficient computational resources for training intensive models</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="bi bi-graph-down text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Carbon Offsetting</h6>
+                            <p class="small text-muted">Consider purchasing carbon credits for high-impact training runs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

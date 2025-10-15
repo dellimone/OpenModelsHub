@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Dataset Types
+
+      Contains types for ML datasets.
+      Maps to: schema:Dataset, dcat:Dataset, Croissant, mls:Dataset
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- Import dependencies -->
+  <xs:include schemaLocation="omh-enumerations.xsd"/>
+  <xs:include schemaLocation="omh-base-types.xsd"/>
+
+  <!-- ========================================
+       DATASET TYPE
+       ======================================== -->
+
+  <xs:complexType name="DatasetType">
+    <xs:annotation>
+      <xs:documentation>
+        ML dataset - Maps to:
+        - schema:Dataset
+        - dcat:Dataset
+        - Croissant (extends schema:Dataset)
+        - mls:Dataset
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="omh:MLAssetBaseType">
+        <xs:sequence>
+          <!-- File Information -->
+          <xs:element name="filePaths" type="omh:FilePathListType">
+            <xs:annotation>
+              <xs:documentation>
+                Maps to:
+                - schema:distribution
+                - dcat:distribution
+                - cr:url
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="totalSizeBytes" type="xs:long">
+            <xs:annotation>
+              <xs:documentation>
+                Maps to:
+                - schema:contentSize
+                - dcat:byteSize
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="format" type="omh:DatasetFormatEnum">
+            <xs:annotation>
+              <xs:documentation>
+                Maps to:
+                - schema:encodingFormat
+                - dcat:mediaType
+                - cr:encodingFormat
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <!-- Structure -->
+          <xs:element name="schema" type="omh:SchemaDefinitionType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to schema:variableMeasured, cr:RecordSet</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="numRecords" type="xs:long" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to cr:recordCount</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="numFeatures" type="xs:int" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to cr:Field count</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="targetColumn" type="xs:string" minOccurs="0"/>
+
+          <!-- Data Analysis -->
+          <xs:element name="dataTypes" type="omh:DataTypesMapType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to cr:dataType</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="categoricalColumns" type="omh:ColumnListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to cr:Field (categorical)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="numericalColumns" type="omh:ColumnListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to cr:Field (numerical)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="missingValuesCount" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>JSON per-column missing value statistics (omh: extension)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <!-- Privacy (OpenModelsHub extension) -->
+          <xs:element name="privacyLevel" type="omh:PrivacyLevelEnum"/>
+          <xs:element name="ethicalConsiderations" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to fair4ml:ethicalSocial</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <!-- Collection (OpenModelsHub extension) -->
+          <xs:element name="collectionMethod" type="xs:string" minOccurs="0"/>
+          <xs:element name="samplingStrategy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to mex:SamplingMethod</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!-- ========================================
+       SUPPORTING TYPES
+       ======================================== -->
+
+  <xs:complexType name="FilePathListType">
+    <xs:sequence>
+      <xs:element name="path" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="DataTypesMapType">
+    <xs:sequence>
+      <xs:element name="column" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="dataType" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ColumnListType">
+    <xs:sequence>
+      <xs:element name="column" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

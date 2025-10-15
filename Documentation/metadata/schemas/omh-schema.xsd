@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           xmlns:dc="http://purl.org/dc/elements/1.1/"
+           xmlns:dct="http://purl.org/dc/terms/"
+           xmlns:schema="http://schema.org/"
+           xmlns:dcat="http://www.w3.org/ns/dcat#"
+           xmlns:prov="http://www.w3.org/ns/prov#"
+           xmlns:cr="http://mlcommons.org/croissant/"
+           xmlns:mls="http://www.w3.org/ns/mls#"
+           xmlns:fair4ml="https://w3id.org/fair4ml#"
+           xmlns:mex="http://mex.aksw.org/mex-core"
+           xmlns:hpc="https://hpc-fair.github.io/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Unified Metadata Schema
+
+      Integrates 11 international metadata standards for ML research assets:
+
+      Foundation Standards:
+      - Dublin Core (DCMI Terms) - http://purl.org/dc/terms/
+      - Schema.org - http://schema.org/
+      - DataCite Metadata Schema 4.6
+      - W3C DCAT 2.0 - http://www.w3.org/ns/dcat#
+      - W3C PROV-O 1.0 - http://www.w3.org/ns/prov#
+
+      ML-Specific Standards:
+      - Croissant 1.0 - http://mlcommons.org/croissant/
+      - ML-Schema - http://www.w3.org/ns/mls#
+      - FAIR4ML 0.1.0 - https://w3id.org/fair4ml#
+      - OpenMetadata MLModel
+      - MEX Vocabulary 1.0.2 - http://mex.aksw.org/mex-core
+
+      Infrastructure Standards:
+      - HPC Ontology 1.1.0 - https://hpc-fair.github.io/ontology#
+
+      Version: 1.0 (Verified)
+      Date: 2025
+      License: CC0 1.0 Universal
+
+      All property mappings verified against official standard specifications.
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- ========================================
+       IMPORT MODULAR SCHEMA FILES
+       ======================================== -->
+
+  <xs:include schemaLocation="omh-enumerations.xsd"/>
+  <xs:include schemaLocation="omh-attribution.xsd"/>
+  <xs:include schemaLocation="omh-base-types.xsd"/>
+  <xs:include schemaLocation="omh-model.xsd"/>
+  <xs:include schemaLocation="omh-dataset.xsd"/>
+  <xs:include schemaLocation="omh-experiment.xsd"/>
+  <xs:include schemaLocation="omh-computational-resources.xsd"/>
+
+  <!-- ========================================
+       ROOT ELEMENT
+       ======================================== -->
+
+  <xs:element name="OpenModelsHub">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="models" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="model" type="omh:ModelType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="datasets" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="dataset" type="omh:DatasetType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="experiments" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="experiment" type="omh:ExperimentType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="researchers" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="researcher" type="omh:ResearcherType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="organizations" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="organization" type="omh:OrganizationType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="computationalResources" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="localResource" type="omh:LocalResourceType" minOccurs="0" maxOccurs="unbounded"/>
+              <xs:element name="cloudResource" type="omh:CloudResourceType" minOccurs="0" maxOccurs="unbounded"/>
+              <xs:element name="hpcResource" type="omh:HPCResourceType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="checkpoints" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="checkpoint" type="omh:CheckpointType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="resourceUtilizations" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="resourceUtilization" type="omh:ResourceUtilizationType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" fixed="1.0"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

@@ -1,0 +1,210 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Researchers - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-people"></i> Researchers
+        <span class="badge bg-secondary">{{ total_count }}</span>
+    </h2>
+    <a href="{% url 'admin:research_researcher_add' %}" class="btn btn-secondary">
+        <i class="bi bi-plus-circle"></i> Add New Researcher
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search researchers by name or affiliation..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search_query %}
+            <p class="text-muted mb-0">
+                Found {{ total_count }} result{{ total_count|pluralize }} for "{{ search_query }}"
+                <a href="{% url 'frontend:researcher_list' %}" class="text-decoration-none">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Researchers List -->
+{% if page_obj %}
+    <div class="row">
+        {% for researcher in page_obj %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card asset-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <a href="{% url 'frontend:researcher_detail' researcher.id %}" class="text-decoration-none">
+                                    {{ researcher.full_name }}
+                                </a>
+                            </h5>
+                            <div class="text-end">
+                                <span class="badge
+                                    {% if researcher.profile_visibility == 'public' %}bg-success
+                                    {% elif researcher.profile_visibility == 'restricted' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    <i class="bi bi-eye"></i> {{ researcher.get_profile_visibility_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="card-text text-muted mb-2">
+                            <i class="bi bi-briefcase"></i> {{ researcher.affiliation }}
+                        </p>
+
+                        <p class="card-text text-muted small mb-2">
+                            <i class="bi bi-building"></i> {{ researcher.organization.name }}
+                        </p>
+
+                        <!-- ORCID -->
+                        {% if researcher.orcid %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-person-badge"></i> ORCID:
+                                    <a href="https://orcid.org/{{ researcher.orcid }}" target="_blank" class="text-decoration-none font-monospace">
+                                        {{ researcher.orcid }}
+                                    </a>
+                                </small>
+                            </div>
+                        {% endif %}
+
+                        <!-- Research Metrics -->
+                        <div class="mb-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-muted small">H-Index</div>
+                                    <div class="fw-bold fs-5">{{ researcher.h_index }}</div>
+                                </div>
+                                <div class="col-8">
+                                    <div class="text-muted small">Citations</div>
+                                    <div class="fw-bold fs-5">{{ researcher.citation_count|floatformat:"0g" }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Research Interests -->
+                        {% if researcher.research_interests %}
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">Research Interests:</div>
+                                {% for interest in researcher.research_interests|slice:":3" %}
+                                    <span class="tag">{{ interest }}</span>
+                                {% endfor %}
+                                {% if researcher.research_interests|length > 3 %}
+                                    <span class="tag">+{{ researcher.research_interests|length|add:"-3" }} more</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Expertise Areas -->
+                        {% if researcher.expertise_areas %}
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">Expertise:</div>
+                                {% for area in researcher.expertise_areas|slice:":2" %}
+                                    <span class="badge bg-info me-1">{{ area }}</span>
+                                {% endfor %}
+                                {% if researcher.expertise_areas|length > 2 %}
+                                    <span class="text-muted small">+{{ researcher.expertise_areas|length|add:"-2" }} more</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Contact -->
+                        <div class="mt-auto">
+                            <small class="text-muted">
+                                <i class="bi bi-envelope"></i> {{ researcher.email }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {% if researcher.last_active %}
+                                    Active {{ researcher.last_active|timesince }} ago
+                                {% else %}
+                                    Joined {{ researcher.created_at|timesince }} ago
+                                {% endif %}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt"></i> {{ researcher.organization.country }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Researchers pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+        <h4 class="text-muted mt-3">No researchers found</h4>
+        {% if search_query %}
+            <p class="text-muted">No researchers match your search criteria.</p>
+            <a href="{% url 'frontend:researcher_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> View All Researchers
+            </a>
+        {% else %}
+            <p class="text-muted">Get started by adding researcher profiles to the repository.</p>
+            <a href="{% url 'admin:research_researcher_add' %}" class="btn btn-secondary">
+                <i class="bi bi-plus-circle"></i> Add First Researcher
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

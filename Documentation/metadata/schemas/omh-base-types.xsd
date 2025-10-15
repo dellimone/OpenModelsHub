@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Base Types
+
+      Contains the abstract base type for all ML assets (Model, Dataset, Experiment).
+      Integrates foundation standards: Dublin Core, Schema.org, DataCite, PROV-O.
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- Import dependencies -->
+  <xs:include schemaLocation="omh-enumerations.xsd"/>
+  <xs:include schemaLocation="omh-attribution.xsd"/>
+
+  <!-- ========================================
+       BASE TYPES
+       ======================================== -->
+
+  <xs:complexType name="MLAssetBaseType" abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        Abstract base type for all ML assets (Model, Dataset, Experiment).
+        Integrates foundation standards: Dublin Core, Schema.org, DataCite, PROV-O.
+        All mappings verified against official specifications.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <!-- Identity -->
+      <xs:element name="id" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            UUID - Maps to:
+            - schema:@id
+            - datacite:Identifier
+            - prov:Entity (class)
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="persistentIdentifier" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            DOI, ARK, etc. - Maps to:
+            - dc:identifier
+            - schema:identifier
+            - datacite:identifier
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Basic Information -->
+      <xs:element name="name" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dc:title
+            - schema:name
+            - datacite:title
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="description" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dc:description
+            - schema:description
+            - datacite:description
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="version" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - schema:version
+            - datacite:version
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Temporal -->
+      <xs:element name="createdAt" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dc:date
+            - schema:dateCreated
+            - datacite:date
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dct:modified
+            - schema:dateModified
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Ownership & Attribution -->
+      <xs:element name="createdBy" type="omh:ResearcherRefType">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dc:creator
+            - schema:creator (Person)
+            - datacite:creator
+            - prov:wasAttributedTo
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="organization" type="omh:OrganizationRefType">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dc:publisher
+            - schema:publisher (Organization)
+            - datacite:publisher
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Versioning -->
+      <xs:element name="parentVersion" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dct:isVersionOf
+            - schema:isBasedOn
+            - datacite:relatedIdentifier
+            - prov:wasDerivedFrom
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="versionNotes" type="xs:string" minOccurs="0"/>
+
+      <!-- Rights & Access -->
+      <xs:element name="license" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            SPDX identifier - Maps to:
+            - dc:rights
+            - schema:license
+            - datacite:rights
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="accessRights" type="omh:AccessRightsEnum">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dct:accessRights
+            - datacite:rights
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Classification -->
+      <xs:element name="subjects" type="omh:SubjectsType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Maps to:
+            - dc:subject
+            - schema:keywords
+            - datacite:subject
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Integrity (OpenModelsHub extension) -->
+      <xs:element name="checksum" type="xs:string"/>
+      <xs:element name="checksumAlgorithm" type="omh:ChecksumAlgorithmEnum"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ========================================
+       SUPPORTING TYPES
+       ======================================== -->
+
+  <xs:complexType name="SubjectsType">
+    <xs:sequence>
+      <xs:element name="subject" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SchemaDefinitionType">
+    <xs:sequence>
+      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

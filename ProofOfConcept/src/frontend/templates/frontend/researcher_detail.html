@@ -1,0 +1,392 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}{{ researcher.full_name }} - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="mb-2">
+            <i class="bi bi-person"></i> {{ researcher.full_name }}
+            {% if researcher.orcid %}
+                <a href="https://orcid.org/{{ researcher.orcid }}" target="_blank" class="text-decoration-none">
+                    <span class="badge bg-success">
+                        <i class="bi bi-person-badge"></i> ORCID
+                    </span>
+                </a>
+            {% endif %}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'frontend:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'frontend:researcher_list' %}">Researchers</a></li>
+                <li class="breadcrumb-item active">{{ researcher.full_name }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="text-end">
+        <span class="badge
+            {% if researcher.profile_visibility == 'public' %}bg-success
+            {% elif researcher.profile_visibility == 'restricted' %}bg-warning
+            {% else %}bg-secondary{% endif %} fs-6">
+            <i class="bi bi-eye"></i> {{ researcher.get_profile_visibility_display }}
+        </span>
+    </div>
+</div>
+
+<!-- Researcher Profile -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Research Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metadata-section">
+                            <h6><i class="bi bi-briefcase"></i> Professional Information</h6>
+                            <div class="mb-2">
+                                <strong>Affiliation:</strong><br>
+                                {{ researcher.affiliation }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Organization:</strong><br>
+                                <i class="bi bi-building"></i> {{ researcher.organization.name }}
+                                <small class="text-muted">({{ researcher.organization.get_organization_type_display }})</small>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Location:</strong><br>
+                                <i class="bi bi-geo-alt"></i> {{ researcher.organization.city }}, {{ researcher.organization.country }}
+                            </div>
+                            {% if researcher.organization.website %}
+                                <div class="mb-2">
+                                    <strong>Organization Website:</strong><br>
+                                    <a href="{{ researcher.organization.website }}" target="_blank" class="text-decoration-none">
+                                        <i class="bi bi-link-45deg"></i> Visit Website
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metadata-section">
+                            <h6><i class="bi bi-graph-up"></i> Research Metrics</h6>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="border rounded p-3 mb-2">
+                                        <div class="fs-3 fw-bold text-primary">{{ researcher.h_index }}</div>
+                                        <div class="text-muted small">H-Index</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded p-3 mb-2">
+                                        <div class="fs-3 fw-bold text-success">{{ researcher.citation_count|floatformat:"0g" }}</div>
+                                        <div class="text-muted small">Citations</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="border rounded p-3">
+                                        <div class="fs-4 fw-bold text-info">{{ total_models }}</div>
+                                        <div class="text-muted small">Models</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded p-3">
+                                        <div class="fs-4 fw-bold text-warning">{{ total_datasets }}</div>
+                                        <div class="text-muted small">Datasets</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Research Interests -->
+                {% if researcher.research_interests %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-lightbulb"></i> Research Interests</h6>
+                        <div class="row">
+                            {% for interest in researcher.research_interests %}
+                                <div class="col-md-4 mb-2">
+                                    <span class="badge bg-primary">{{ interest }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Expertise Areas -->
+                {% if researcher.expertise_areas %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-award"></i> Expertise Areas</h6>
+                        <div class="row">
+                            {% for area in researcher.expertise_areas %}
+                                <div class="col-md-4 mb-2">
+                                    <span class="badge bg-info">{{ area }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Contact Information -->
+                <div class="metadata-section">
+                    <h6><i class="bi bi-envelope"></i> Contact Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Email:</strong><br>
+                            <a href="mailto:{{ researcher.email }}" class="text-decoration-none">
+                                <i class="bi bi-envelope"></i> {{ researcher.email }}
+                            </a>
+                        </div>
+                        {% if researcher.orcid %}
+                            <div class="col-md-6">
+                                <strong>ORCID:</strong><br>
+                                <a href="https://orcid.org/{{ researcher.orcid }}" target="_blank" class="text-decoration-none">
+                                    <i class="bi bi-person-badge"></i> {{ researcher.orcid }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Quick Stats Card -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Contribution Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>ML Models</span>
+                        <span class="fw-bold">{{ total_models }}</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 6px;">
+                        <div class="progress-bar bg-primary" style="width: {% widthratio total_models|default:"0"|add:"1" 1 10 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Datasets</span>
+                        <span class="fw-bold">{{ total_datasets }}</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: {% widthratio total_datasets|default:"0"|add:"1" 1 10 %}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Experiments</span>
+                        <span class="fw-bold">{{ total_experiments }}</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 6px;">
+                        <div class="progress-bar bg-warning" style="width: {% widthratio total_experiments|default:"0"|add:"1" 1 10 %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between">
+                        <span>Publications</span>
+                        <span class="fw-bold">{{ publications.count|default:"0" }}</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: {% widthratio publications.count|default:"0"|add:"1" 1 5 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-clock-history"></i> Recent Activity</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Joined:</strong><br>
+                    <small class="text-muted">{{ researcher.created_at|date:"M d, Y" }} ({{ researcher.created_at|timesince }} ago)</small>
+                </div>
+                {% if researcher.last_active %}
+                    <div>
+                        <strong>Last Active:</strong><br>
+                        <small class="text-muted">{{ researcher.last_active|date:"M d, Y" }} ({{ researcher.last_active|timesince }} ago)</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Research Contributions -->
+<div class="row">
+    <!-- Models -->
+    {% if created_models %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cpu"></i> Recent Models
+                        <span class="badge bg-secondary">{{ total_models }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for model in created_models %}
+                        <div class="mb-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'frontend:model_detail' model.id %}" class="text-decoration-none">
+                                    {{ model.name|truncatechars:25 }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                {{ model.framework|title }} • {{ model.created_at|timesince }} ago
+                            </small>
+                            <div class="mt-1">
+                                {% with score=model.calculate_quality_score %}
+                                    {% if score >= 80 %}
+                                        <span class="quality-score quality-excellent">{{ score }}%</span>
+                                    {% elif score >= 60 %}
+                                        <span class="quality-score quality-good">{{ score }}%</span>
+                                    {% elif score >= 40 %}
+                                        <span class="quality-score quality-fair">{{ score }}%</span>
+                                    {% else %}
+                                        <span class="quality-score quality-poor">{{ score }}%</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if total_models > created_models|length %}
+                        <a href="{% url 'frontend:model_list' %}?created_by={{ researcher.id }}" class="btn btn-outline-primary btn-sm">
+                            View All {{ total_models }} Models
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Datasets -->
+    {% if created_datasets %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table"></i> Recent Datasets
+                        <span class="badge bg-secondary">{{ total_datasets }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for dataset in created_datasets %}
+                        <div class="mb-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'frontend:dataset_detail' dataset.id %}" class="text-decoration-none">
+                                    {{ dataset.name|truncatechars:25 }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                {{ dataset.format|upper }} •
+                                {% if dataset.num_records %}{{ dataset.num_records|floatformat:"0g" }} records • {% endif %}
+                                {{ dataset.created_at|timesince }} ago
+                            </small>
+                            <div class="mt-1">
+                                {% with score=dataset.calculate_quality_score %}
+                                    {% if score >= 80 %}
+                                        <span class="quality-score quality-excellent">{{ score }}%</span>
+                                    {% elif score >= 60 %}
+                                        <span class="quality-score quality-good">{{ score }}%</span>
+                                    {% elif score >= 40 %}
+                                        <span class="quality-score quality-fair">{{ score }}%</span>
+                                    {% else %}
+                                        <span class="quality-score quality-poor">{{ score }}%</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if total_datasets > created_datasets|length %}
+                        <a href="{% url 'frontend:dataset_list' %}?created_by={{ researcher.id }}" class="btn btn-outline-success btn-sm">
+                            View All {{ total_datasets }} Datasets
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Experiments -->
+    {% if created_experiments %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Recent Experiments
+                        <span class="badge bg-secondary">{{ total_experiments }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for experiment in created_experiments %}
+                        <div class="mb-3">
+                            <h6 class="mb-1">
+                                <a href="{% url 'frontend:experiment_detail' experiment.id %}" class="text-decoration-none">
+                                    {{ experiment.name|truncatechars:25 }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                {{ experiment.experiment_type|title }} •
+                                <span class="badge badge-sm
+                                    {% if experiment.status == 'completed' %}bg-success
+                                    {% elif experiment.status == 'running' %}bg-primary
+                                    {% elif experiment.status == 'failed' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ experiment.get_status_display }}
+                                </span>
+                            </small>
+                            <div class="mt-1">
+                                {% with score=experiment.calculate_quality_score %}
+                                    {% if score >= 80 %}
+                                        <span class="quality-score quality-excellent">{{ score }}%</span>
+                                    {% elif score >= 60 %}
+                                        <span class="quality-score quality-good">{{ score }}%</span>
+                                    {% elif score >= 40 %}
+                                        <span class="quality-score quality-fair">{{ score }}%</span>
+                                    {% else %}
+                                        <span class="quality-score quality-poor">{{ score }}%</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if total_experiments > created_experiments|length %}
+                        <a href="{% url 'frontend:experiment_list' %}?created_by={{ researcher.id }}" class="btn btn-outline-warning btn-sm">
+                            View All {{ total_experiments }} Experiments
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'frontend:researcher_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Researchers
+                </a>
+            </div>
+            <div>
+                <a href="{% url 'admin:research_researcher_change' researcher.id %}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

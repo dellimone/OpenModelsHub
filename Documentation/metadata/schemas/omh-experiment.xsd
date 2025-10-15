@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Experiment Types
+
+      Contains types for ML training/evaluation runs and related components.
+      Maps to: mls:Run, fair4ml:TrainingRun, mex:Execution, prov:Activity
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- Import dependencies -->
+  <xs:include schemaLocation="omh-enumerations.xsd"/>
+  <xs:include schemaLocation="omh-base-types.xsd"/>
+  <xs:include schemaLocation="omh-model.xsd"/>
+
+  <!-- ========================================
+       EXPERIMENT TYPE
+       ======================================== -->
+
+  <xs:complexType name="ExperimentType">
+    <xs:annotation>
+      <xs:documentation>
+        ML training/evaluation run - Maps to:
+        - mls:Run
+        - fair4ml:TrainingRun
+        - mex:Execution
+        - prov:Activity
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="omh:MLAssetBaseType">
+        <xs:sequence>
+          <!-- Type and Status -->
+          <xs:element name="experimentType" type="omh:ExperimentTypeEnum">
+            <xs:annotation>
+              <xs:documentation>Maps to mex:ApplicationContext</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="status" type="omh:ExperimentStatusEnum"/>
+
+          <!-- Timing -->
+          <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to prov:startedAtTime</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to prov:endedAtTime</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="durationSeconds" type="xs:int" minOccurs="0"/>
+
+          <!-- Configuration (OpenModelsHub extension) -->
+          <xs:element name="configParameters" type="omh:ConfigParametersType" minOccurs="0"/>
+          <xs:element name="randomSeed" type="xs:int" minOccurs="0"/>
+          <xs:element name="reproducibilityHash" type="xs:string" minOccurs="0"/>
+
+          <!-- Code & Environment -->
+          <xs:element name="codeRepositoryUrl" type="xs:anyURI" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to schema:codeRepository (via FAIR4ML)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="codeCommitHash" type="xs:string" minOccurs="0"/>
+          <xs:element name="environmentSpecification" type="omh:EnvironmentSpecType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to fair4ml:softwareRequirements</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <!-- Relationships -->
+          <xs:element name="baseModel" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Model ID for fine-tuning - Maps to prov:used</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="datasets" type="omh:DatasetRefListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to mls:hasInput, prov:used</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="producedModels" type="omh:ModelRefListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to mls:hasOutput</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="hyperparameters" type="omh:HyperparameterListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to mls:hasHyperParameter</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="metrics" type="omh:ExperimentMetricListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to mls:Evaluation, mexperf:PerformanceMeasure</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="checkpoints" type="omh:CheckpointListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to prov:wasGeneratedBy</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="resourceUtilizations" type="omh:ResourceUtilizationListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to mex:Execution, prov:Activity</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!-- ========================================
+       SUPPORTING TYPES
+       ======================================== -->
+
+  <xs:complexType name="ConfigParametersType">
+    <xs:sequence>
+      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EnvironmentSpecType">
+    <xs:sequence>
+      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="HyperparameterListType">
+    <xs:sequence>
+      <xs:element name="hyperparameter" type="omh:HyperparameterType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="HyperparameterType">
+    <xs:annotation>
+      <xs:documentation>
+        Maps to: mls:HyperParameter, mex:HyperParameter
+        Relationship: mls:hasHyperParameter
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="parameterName" type="xs:string"/>
+      <xs:element name="parameterValue" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to mls:hasValue</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="parameterType" type="xs:string" minOccurs="0"/>
+      <xs:element name="displayOrder" type="xs:int" minOccurs="0"/>
+      <xs:element name="isTunable" type="xs:boolean" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExperimentMetricListType">
+    <xs:sequence>
+      <xs:element name="metric" type="omh:ExperimentMetricType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExperimentMetricType">
+    <xs:annotation>
+      <xs:documentation>
+        Time-series metric tracking
+        Maps to: mls:Evaluation + mls:Measure, mexperf:PerformanceMeasure
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="metricName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to mls:Measure</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="value" type="xs:float">
+        <xs:annotation>
+          <xs:documentation>Maps to mls:hasValue</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="metricType" type="omh:MetricTypeEnum">
+        <xs:annotation>
+          <xs:documentation>Maps to mexperf:PerformanceMeasure subtypes</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="step" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>Epoch/step number (omh: extension)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="timestamp" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Maps to prov:generatedAtTime</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CheckpointListType">
+    <xs:sequence>
+      <xs:element name="checkpoint" type="omh:CheckpointType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="CheckpointType">
+    <xs:annotation>
+      <xs:documentation>
+        Training checkpoint
+        Maps to: prov:Entity (intermediate artifact), related to mls:Model
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="checkpointName" type="xs:string"/>
+      <xs:element name="step" type="xs:int"/>
+      <xs:element name="savedAt" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Maps to prov:generatedAtTime</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="filePath" type="xs:string"/>
+      <xs:element name="fileSizeBytes" type="xs:long"/>
+      <xs:element name="checksum" type="xs:string"/>
+      <xs:element name="checksumAlgorithm" type="omh:ChecksumAlgorithmEnum"/>
+      <xs:element name="metricsSnapshot" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>JSON snapshot of metrics at checkpoint time (related to mls:Evaluation)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="isBest" type="xs:boolean"/>
+      <xs:element name="isFinal" type="xs:boolean"/>
+      <xs:element name="notes" type="xs:string" minOccurs="0"/>
+      <xs:element name="experimentId" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to prov:wasGeneratedBy (reverse)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="modelId" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Can be promoted to mls:Model</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ResourceUtilizationListType">
+    <xs:sequence>
+      <xs:element name="resourceUtilization" type="omh:ResourceUtilizationType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Forward declaration - full definition in omh-computational-resources.xsd -->
+  <xs:complexType name="ResourceUtilizationType">
+    <xs:sequence>
+      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

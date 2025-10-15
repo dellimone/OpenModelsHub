@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Enumeration Types
+
+      Contains all enumeration types used throughout the schema.
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- ========================================
+       ENUMERATIONS
+       ======================================== -->
+
+  <xs:simpleType name="AccessRightsEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to dct:accessRights</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PUBLIC"/>
+      <xs:enumeration value="REGISTERED"/>
+      <xs:enumeration value="RESTRICTED"/>
+      <xs:enumeration value="EMBARGOED"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ChecksumAlgorithmEnum">
+    <xs:annotation>
+      <xs:documentation>OpenModelsHub extension (no standard equivalent)</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="MD5"/>
+      <xs:enumeration value="SHA1"/>
+      <xs:enumeration value="SHA256"/>
+      <xs:enumeration value="SHA512"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ModelFormatEnum">
+    <xs:annotation>
+      <xs:documentation>OpenModelsHub extension (ML-Schema and FAIR4ML don't specify format enum)</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PYTORCH"/>
+      <xs:enumeration value="TENSORFLOW_SAVEDMODEL"/>
+      <xs:enumeration value="TENSORFLOW_H5"/>
+      <xs:enumeration value="ONNX"/>
+      <xs:enumeration value="KERAS"/>
+      <xs:enumeration value="SCIKIT_LEARN"/>
+      <xs:enumeration value="XGBOOST"/>
+      <xs:enumeration value="LIGHTGBM"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DatasetFormatEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to schema:encodingFormat, dcat:mediaType, cr:encodingFormat</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CSV"/>
+      <xs:enumeration value="JSON"/>
+      <xs:enumeration value="JSONL"/>
+      <xs:enumeration value="PARQUET"/>
+      <xs:enumeration value="HDF5"/>
+      <xs:enumeration value="ARROW"/>
+      <xs:enumeration value="TFRECORD"/>
+      <xs:enumeration value="IMAGE_FOLDER"/>
+      <xs:enumeration value="TEXT_FILES"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PrivacyLevelEnum">
+    <xs:annotation>
+      <xs:documentation>OpenModelsHub extension</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PUBLIC"/>
+      <xs:enumeration value="INTERNAL"/>
+      <xs:enumeration value="CONFIDENTIAL"/>
+      <xs:enumeration value="RESTRICTED"/>
+      <xs:enumeration value="ANONYMIZED"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExperimentStatusEnum">
+    <xs:annotation>
+      <xs:documentation>OpenModelsHub extension (ML-Schema Run doesn't define status enum)</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PENDING"/>
+      <xs:enumeration value="RUNNING"/>
+      <xs:enumeration value="COMPLETED"/>
+      <xs:enumeration value="FAILED"/>
+      <xs:enumeration value="CANCELLED"/>
+      <xs:enumeration value="PAUSED"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ModelTypeEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to fair4ml:mlTask</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CLASSIFICATION"/>
+      <xs:enumeration value="REGRESSION"/>
+      <xs:enumeration value="CLUSTERING"/>
+      <xs:enumeration value="DIMENSIONALITY_REDUCTION"/>
+      <xs:enumeration value="ANOMALY_DETECTION"/>
+      <xs:enumeration value="TIME_SERIES_FORECASTING"/>
+      <xs:enumeration value="NATURAL_LANGUAGE_PROCESSING"/>
+      <xs:enumeration value="COMPUTER_VISION"/>
+      <xs:enumeration value="GENERATIVE"/>
+      <xs:enumeration value="REINFORCEMENT_LEARNING"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ExperimentTypeEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to mex:ApplicationContext</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TRAINING"/>
+      <xs:enumeration value="VALIDATION"/>
+      <xs:enumeration value="TESTING"/>
+      <xs:enumeration value="FINE_TUNING"/>
+      <xs:enumeration value="HYPERPARAMETER_TUNING"/>
+      <xs:enumeration value="TRANSFER_LEARNING"/>
+      <xs:enumeration value="EVALUATION"/>
+      <xs:enumeration value="BENCHMARKING"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="MetricTypeEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to mexperf:PerformanceMeasure subtypes</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="LOSS"/>
+      <xs:enumeration value="ACCURACY"/>
+      <xs:enumeration value="PRECISION"/>
+      <xs:enumeration value="RECALL"/>
+      <xs:enumeration value="F1_SCORE"/>
+      <xs:enumeration value="AUC_ROC"/>
+      <xs:enumeration value="CLASSIFICATION_MEASURE"/>
+      <xs:enumeration value="REGRESSION_MEASURE"/>
+      <xs:enumeration value="CLUSTERING_MEASURE"/>
+      <xs:enumeration value="STATISTICAL_MEASURE"/>
+      <xs:enumeration value="CUSTOM"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SplitTypeEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to mex:Phase</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TRAINING"/>
+      <xs:enumeration value="VALIDATION"/>
+      <xs:enumeration value="TESTING"/>
+      <xs:enumeration value="HOLDOUT"/>
+      <xs:enumeration value="CUSTOM"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ResourceTypeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="LOCAL"/>
+      <xs:enumeration value="CLOUD"/>
+      <xs:enumeration value="HPC"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="AvailabilityEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="AVAILABLE"/>
+      <xs:enumeration value="BUSY"/>
+      <xs:enumeration value="MAINTENANCE"/>
+      <xs:enumeration value="OFFLINE"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CloudProviderEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="AWS"/>
+      <xs:enumeration value="AZURE"/>
+      <xs:enumeration value="GCP"/>
+      <xs:enumeration value="IBM_CLOUD"/>
+      <xs:enumeration value="ORACLE_CLOUD"/>
+      <xs:enumeration value="ALIBABA_CLOUD"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SchedulerTypeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SLURM"/>
+      <xs:enumeration value="PBS"/>
+      <xs:enumeration value="TORQUE"/>
+      <xs:enumeration value="LSF"/>
+      <xs:enumeration value="SGE"/>
+      <xs:enumeration value="CONDOR"/>
+      <xs:enumeration value="KUBERNETES"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="InterconnectTypeEnum">
+    <xs:annotation>
+      <xs:documentation>Maps to HPC Ontology interconnect types</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="INFINIBAND"/>
+      <xs:enumeration value="ETHERNET"/>
+      <xs:enumeration value="OMNI_PATH"/>
+      <xs:enumeration value="FIBER_CHANNEL"/>
+      <xs:enumeration value="OTHER"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

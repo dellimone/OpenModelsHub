@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Model Types
+
+      Contains types for trained ML models.
+      Maps to: mls:Model, fair4ml:MLModel, prov:Entity
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- Import dependencies -->
+  <xs:include schemaLocation="omh-enumerations.xsd"/>
+  <xs:include schemaLocation="omh-base-types.xsd"/>
+
+  <!-- ========================================
+       MODEL TYPE
+       ======================================== -->
+
+  <xs:complexType name="ModelType">
+    <xs:annotation>
+      <xs:documentation>
+        Trained ML model - Maps to:
+        - mls:Model
+        - fair4ml:MLModel
+        - prov:Entity
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="omh:MLAssetBaseType">
+        <xs:sequence>
+          <!-- File Information (OpenModelsHub extension) -->
+          <xs:element name="modelFilePath" type="xs:string"/>
+          <xs:element name="modelFileSize" type="xs:long"/>
+          <xs:element name="modelFormat" type="omh:ModelFormatEnum"/>
+
+          <!-- Architecture -->
+          <xs:element name="architecture" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>
+                Maps to:
+                - mls:algorithm
+                - fair4ml:modelCategory
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="framework" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>
+                Maps to:
+                - mls:implementedIn
+                - fair4ml:framework
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="frameworkVersion" type="xs:string"/>
+          <xs:element name="modelType" type="omh:ModelTypeEnum">
+            <xs:annotation>
+              <xs:documentation>Maps to fair4ml:mlTask</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <!-- Schemas (OpenModelsHub extension) -->
+          <xs:element name="inputSchema" type="omh:SchemaDefinitionType" minOccurs="0"/>
+          <xs:element name="outputSchema" type="omh:SchemaDefinitionType" minOccurs="0"/>
+
+          <!-- Performance (OpenModelsHub extension) -->
+          <xs:element name="inferenceTimeMs" type="xs:float" minOccurs="0"/>
+          <xs:element name="modelSizeMb" type="xs:float" minOccurs="0"/>
+
+          <!-- Relationships -->
+          <xs:element name="producedBy" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Experiment ID - Maps to prov:wasGeneratedBy</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="trainingDatasets" type="omh:DatasetRefListType" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to fair4ml:trainingDataset, prov:used</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!-- ========================================
+       SUPPORTING TYPES
+       ======================================== -->
+
+  <xs:complexType name="DatasetRefListType">
+    <xs:sequence>
+      <xs:element name="datasetRef" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ModelRefListType">
+    <xs:sequence>
+      <xs:element name="modelRef" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

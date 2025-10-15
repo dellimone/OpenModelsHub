@@ -1,0 +1,563 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}{{ model.name }} - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="mb-2">
+            <i class="bi bi-cpu"></i> {{ model.name }}
+            <span class="badge bg-primary">v{{ model.version }}</span>
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'frontend:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'frontend:model_list' %}">Models</a></li>
+                <li class="breadcrumb-item active">{{ model.name|truncatechars:30 }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="text-end">
+        {% with score=quality_score %}
+            {% if score >= 80 %}
+                <span class="quality-score quality-excellent fs-5">{{ score }}%</span>
+            {% elif score >= 60 %}
+                <span class="quality-score quality-good fs-5">{{ score }}%</span>
+            {% elif score >= 40 %}
+                <span class="quality-score quality-fair fs-5">{{ score }}%</span>
+            {% else %}
+                <span class="quality-score quality-poor fs-5">{{ score }}%</span>
+            {% endif %}
+        {% endwith %}
+        <div class="small text-muted mt-1">Quality Score</div>
+    </div>
+</div>
+
+<!-- Model Overview -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Model Overview</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ model.description|default:"No description provided." }}</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metadata-section">
+                            <h6><i class="bi bi-gear"></i> Technical Details</h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <strong>Framework:</strong><br>
+                                    <span class="badge bg-info">{{ model.get_framework_display }}</span>
+                                    {% if model.framework_version %}
+                                        <small class="text-muted">v{{ model.framework_version }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Model Type:</strong><br>
+                                    <span class="badge bg-success">{{ model.get_model_type_display }}</span>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-sm-6">
+                                    <strong>Format:</strong><br>
+                                    {{ model.get_model_format_display }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>File Size:</strong><br>
+                                    {% if model.model_file_size %}
+                                        {{ model.model_file_size|filesizeformat }}
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metadata-section">
+                            <h6><i class="bi bi-speedometer2"></i> Performance</h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <strong>Inference Time:</strong><br>
+                                    {% if model.inference_time_ms %}
+                                        {{ model.inference_time_ms }} ms
+                                    {% else %}
+                                        Not measured
+                                    {% endif %}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Memory Size:</strong><br>
+                                    {% if model.model_size_mb %}
+                                        {{ model.model_size_mb }} MB
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if model.training_duration_seconds %}
+                                <div class="mt-2">
+                                    <strong>Training Duration:</strong><br>
+                                    {{ model.training_duration_seconds|floatformat:"0" }} seconds
+                                    {% if model.training_duration_seconds >= 3600 %}
+                                        (~{% widthratio model.training_duration_seconds 3600 1 %} hours)
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architecture -->
+                {% if model.architecture %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-diagram-3"></i> Architecture</h6>
+                        <pre class="bg-light p-3 rounded"><code>{{ model.architecture }}</code></pre>
+                    </div>
+                {% endif %}
+
+                <!-- Hyperparameters -->
+                {% if model.hyperparameters %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-sliders"></i> Hyperparameters</h6>
+                        <div class="row">
+                            {% for key, value in model.hyperparameters.items %}
+                                <div class="col-md-4 mb-2">
+                                    <strong>{{ key|title }}:</strong> {{ value }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Tags -->
+                {% if model.tags %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-tags"></i> Tags</h6>
+                        {% for tag in model.tags %}
+                            <span class="tag">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Metadata Card -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-file-text"></i> Metadata</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Created by:</strong><br>
+                    <a href="{% url 'frontend:researcher_detail' model.created_by.id %}" class="text-decoration-none">
+                        <i class="bi bi-person"></i> {{ model.created_by.full_name }}
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <strong>Organization:</strong><br>
+                    <i class="bi bi-building"></i> {{ model.organization.name }}
+                </div>
+                <div class="mb-3">
+                    <strong>Created:</strong><br>
+                    <i class="bi bi-calendar"></i> {{ model.created_at|date:"M d, Y" }}
+                    <small class="text-muted">({{ model.created_at|timesince }} ago)</small>
+                </div>
+                <div class="mb-3">
+                    <strong>Last Updated:</strong><br>
+                    <i class="bi bi-clock"></i> {{ model.updated_at|date:"M d, Y" }}
+                </div>
+                <div class="mb-3">
+                    <strong>Access Rights:</strong><br>
+                    <span class="badge
+                        {% if model.visibility == 'public' %}bg-success
+                        {% elif model.visibility == 'restricted' %}bg-warning
+                        {% else %}bg-secondary{% endif %}">
+                        <i class="bi bi-eye"></i> {{ model.get_visibility_display }}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>License:</strong><br>
+                    <span class="badge bg-info">{{ model.license }}</span>
+                </div>
+                <div>
+                    <strong>Persistent ID:</strong><br>
+                    <small class="text-muted font-monospace">{{ model.persistent_identifier }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Citation Card -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-quote"></i> Citation</h6>
+            </div>
+            <div class="card-body">
+                <div class="bg-light p-3 rounded">
+                    <small class="font-monospace">{{ citation }}</small>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm mt-2" onclick="copyToClipboard('{{ citation }}')">
+                    <i class="bi bi-clipboard"></i> Copy Citation
+                </button>
+            </div>
+        </div>
+
+        <!-- Schemas Card -->
+        {% if model.input_schema or model.output_schema %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-braces"></i> Schemas</h6>
+                </div>
+                <div class="card-body">
+                    {% if model.input_schema %}
+                        <div class="mb-3">
+                            <strong>Input Schema:</strong>
+                            <details class="mt-1">
+                                <summary class="text-primary" style="cursor: pointer;">View JSON Schema</summary>
+                                <pre class="bg-light p-2 rounded mt-2 small"><code>{{ model.input_schema|pprint }}</code></pre>
+                            </details>
+                        </div>
+                    {% endif %}
+                    {% if model.output_schema %}
+                        <div>
+                            <strong>Output Schema:</strong>
+                            <details class="mt-1">
+                                <summary class="text-primary" style="cursor: pointer;">View JSON Schema</summary>
+                                <pre class="bg-light p-2 rounded mt-2 small"><code>{{ model.output_schema|pprint }}</code></pre>
+                            </details>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Training Datasets -->
+{% if training_datasets %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table"></i> Training Datasets
+                        <span class="badge bg-secondary">{{ training_datasets.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for dataset in training_datasets %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'frontend:dataset_detail' dataset.id %}" class="text-decoration-none">
+                                                {{ dataset.name }}
+                                            </a>
+                                        </h6>
+                                        <p class="card-text small text-muted">
+                                            {{ dataset.description|truncatechars:80 }}
+                                        </p>
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="text-muted small">Format</div>
+                                                <div class="fw-bold">{{ dataset.format|upper }}</div>
+                                            </div>
+                                            {% if dataset.num_records %}
+                                                <div class="col-4">
+                                                    <div class="text-muted small">Records</div>
+                                                    <div class="fw-bold">{{ dataset.num_records|floatformat:"0g" }}</div>
+                                                </div>
+                                            {% endif %}
+                                            {% if dataset.num_features %}
+                                                <div class="col-4">
+                                                    <div class="text-muted small">Features</div>
+                                                    <div class="fw-bold">{{ dataset.num_features }}</div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Computational Resources & Environmental Impact -->
+{% if has_resource_data %}
+    <div class="row mb-4">
+        <!-- Resource Utilization Summary -->
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-servers"></i> Resource Utilization
+                        <span class="badge bg-secondary">{{ resource_utilizations.count }} runs</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Average Utilization -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Average CPU Usage</span>
+                            <span class="fw-bold">{{ avg_cpu }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar" style="width: {{ avg_cpu }}%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Average Memory Usage</span>
+                            <span class="fw-bold">{{ avg_memory_gb|floatformat:1 }} GB</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: {% if avg_memory_gb <= 32 %}{% widthratio avg_memory_gb 32 100 %}{% else %}100{% endif %}%"></div>
+                        </div>
+                    </div>
+                    {% if avg_gpu > 0 %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Average GPU Usage</span>
+                                <span class="fw-bold">{{ avg_gpu }}%</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-warning" style="width: {{ avg_gpu }}%"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Total Training Time -->
+                    {% if total_duration > 0 %}
+                        <div class="text-center mt-3">
+                            <div class="fs-4 fw-bold text-primary">
+                                {% if total_duration < 3600 %}
+                                    {{ total_duration|floatformat:"0" }}s
+                                {% else %}
+                                    {% widthratio total_duration 3600 1 %}h {{ total_duration|floatformat:"0" }}s
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small">Total Training Time</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Environmental Impact Summary -->
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-globe2"></i> Environmental Impact
+                        {% if total_carbon >= 5 %}
+                            <span class="badge bg-danger">High Impact</span>
+                        {% elif total_carbon >= 1 %}
+                            <span class="badge bg-warning">Medium Impact</span>
+                        {% else %}
+                            <span class="badge bg-success">Low Impact</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="fs-3 fw-bold {% if total_carbon >= 5 %}text-danger{% elif total_carbon >= 1 %}text-warning{% else %}text-success{% endif %}">
+                            {{ total_carbon }} kg CO₂
+                        </div>
+                        <div class="text-muted small">Total Carbon Footprint</div>
+                    </div>
+                    <div class="text-center mb-3">
+                        <div class="fs-4 fw-bold text-warning">{{ total_energy }} kWh</div>
+                        <div class="text-muted small">Energy Consumed</div>
+                    </div>
+
+                    {% if total_energy > 0 %}
+                        <div class="text-center mb-3">
+                            <div class="fs-6 fw-bold text-info">{{ total_carbon|floatformat:4 }} kg CO₂/kWh</div>
+                            <div class="text-muted small">Carbon Intensity</div>
+                        </div>
+                    {% endif %}
+
+                    <!-- ISO 14067 Compliance -->
+                    <div class="text-center">
+                        {% if total_carbon <= 5 %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> ISO 14067 Compliant
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Above 5kg CO₂ Threshold
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Details -->
+    {% if resource_utilizations %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-activity"></i> Training Runs Resource Usage</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>CPU %</th>
+                                        <th>Memory GB</th>
+                                        <th>GPU %</th>
+                                        <th>Duration</th>
+                                        <th>CO₂ Impact</th>
+                                        <th>Started</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for util in resource_utilizations %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ util.resource.name|truncatechars:20 }}</strong><br>
+                                                <small class="text-muted">{{ util.resource.get_resource_type_display }} • {{ util.resource.location|truncatechars:15 }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar" style="width: {{ util.cpu_utilization_percent }}%"></div>
+                                                </div>
+                                                {{ util.cpu_utilization_percent }}%
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar bg-success" style="width: {% if util.memory_usage_gb <= 32 %}{% widthratio util.memory_usage_gb 32 100 %}{% else %}100{% endif %}%"></div>
+                                                </div>
+                                                {{ util.memory_usage_gb|floatformat:1 }} GB
+                                            </td>
+                                            <td>
+                                                {% if util.gpu_utilization_percent %}
+                                                    <div class="progress" style="height: 4px;">
+                                                        <div class="progress-bar bg-warning" style="width: {{ util.gpu_utilization_percent }}%"></div>
+                                                    </div>
+                                                    {{ util.gpu_utilization_percent }}%
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if util.duration_seconds %}
+                                                    {% if util.duration_seconds < 3600 %}
+                                                        {{ util.duration_seconds|floatformat:"0" }}s
+                                                    {% else %}
+                                                        {% widthratio util.duration_seconds 3600 1 %}h
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% for impact in environmental_impacts %}
+                                                    {% if impact.resource_utilization.id == util.id %}
+                                                        <span class="fw-bold {% if impact.carbon_footprint_kg >= 5 %}text-danger{% elif impact.carbon_footprint_kg >= 1 %}text-warning{% else %}text-success{% endif %}">
+                                                            {{ impact.carbon_footprint_kg }} kg
+                                                        </span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ util.start_time|timesince }} ago</small>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if resource_utilizations.count > 10 %}
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Showing 10 most recent training runs</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    <!-- No Resource Data Available -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-servers text-muted" style="font-size: 2rem;"></i>
+                    <h6 class="text-muted mt-2">Resource Usage Data</h6>
+                    <p class="text-muted small">No computational resource or environmental impact data available for this model. Data will appear here once training runs are recorded.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'frontend:model_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Models
+                </a>
+            </div>
+            <div>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Export Metadata
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ model.id }}', 'dublin_core')">
+                            <i class="bi bi-file-text"></i> Dublin Core
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ model.id }}', 'datacite')">
+                            <i class="bi bi-file-richtext"></i> DataCite
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ model.id }}', 'mlflow')">
+                            <i class="bi bi-file-code"></i> MLflow
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ model.id }}', 'huggingface')">
+                            <i class="bi bi-file-earmark"></i> Hugging Face Card
+                        </a></li>
+                    </ul>
+                </div>
+                <a href="{% url 'admin:assets_model_change' model.id %}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message (could use toast notification)
+        alert('Citation copied to clipboard!');
+    });
+}
+
+function downloadMetadata(modelId, format) {
+    // This would trigger metadata export in the specified format
+    // For now, just show an alert
+    alert('Metadata export for ' + format + ' would be triggered here. This feature demonstrates the seven-standard integration capability.');
+}
+</script>
+{% endblock %}

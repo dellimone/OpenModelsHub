@@ -1,0 +1,350 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Computational Resources - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-servers"></i> Computational Resources
+        <span class="badge bg-secondary">{{ total_resources }}</span>
+    </h2>
+    <a href="{% url 'admin:resources_computationalresource_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Resource
+    </a>
+</div>
+
+<!-- Resource Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-primary">{{ total_resources }}</div>
+                <div class="text-muted">Total Resources</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-success">{{ active_resources }}</div>
+                <div class="text-muted">Active Resources</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-info">{{ total_utilizations }}</div>
+                <div class="text-muted">Total Utilizations</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-warning">{{ avg_cpu_utilization }}%</div>
+                <div class="text-muted">Avg CPU Utilization</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Type Distribution -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-cloud text-primary" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Cloud Resources</h5>
+                <div class="fs-4 fw-bold">{{ cloud_resources }}</div>
+                <small class="text-muted">AWS, GCP, Azure</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-laptop text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Local Resources</h5>
+                <div class="fs-4 fw-bold">{{ local_resources }}</div>
+                <small class="text-muted">Workstations, Servers</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="bi bi-hdd-stack text-info" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">HPC Clusters</h5>
+                <div class="fs-4 fw-bold">{{ hpc_resources }}</div>
+                <small class="text-muted">High Performance Computing</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search resources by name, location, or description..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search_query %}
+            <p class="text-muted mb-0">
+                Found {{ total_count }} result{{ total_count|pluralize }} for "{{ search_query }}"
+                <a href="{% url 'frontend:resources_dashboard' %}" class="text-decoration-none">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Resources List -->
+{% if page_obj %}
+    <div class="row">
+        {% for resource in page_obj %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card asset-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <a href="{% url 'frontend:resource_detail' resource.id %}" class="text-decoration-none">
+                                    {{ resource.name|truncatechars:25 }}
+                                </a>
+                            </h5>
+                            <div class="text-end">
+                                <span class="badge {% if resource.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if resource.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                                <br>
+                                <span class="badge
+                                    {% if resource.resource_type == 'cloud' %}bg-primary
+                                    {% elif resource.resource_type == 'local' %}bg-success
+                                    {% else %}bg-info{% endif %}">
+                                    {{ resource.get_resource_type_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="card-text text-muted mb-2">
+                            <i class="bi bi-geo-alt"></i> {{ resource.location }}
+                        </p>
+
+                        {% if resource.description %}
+                            <p class="card-text small mb-2">{{ resource.description|truncatechars:80 }}</p>
+                        {% endif %}
+
+                        <!-- Hardware Specs -->
+                        <div class="mb-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-muted small">CPU Cores</div>
+                                    <div class="fw-bold">{{ resource.cpu_cores|default:"N/A" }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-muted small">RAM (GB)</div>
+                                    <div class="fw-bold">{{ resource.memory_gb|default:"N/A" }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-muted small">GPUs</div>
+                                    <div class="fw-bold">{{ resource.gpu_count|default:"0" }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Info -->
+                        {% if resource.gpu_model %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-cpu"></i> {{ resource.gpu_model }}
+                                </small>
+                            </div>
+                        {% endif %}
+
+                        {% if resource.energy_source %}
+                            <div class="mb-2">
+                                <span class="badge {% if resource.energy_source == 'renewable' %}bg-success{% else %}bg-warning{% endif %}">
+                                    <i class="bi bi-lightning"></i> {{ resource.get_energy_source_display }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Added {{ resource.created_at|timesince }} ago
+                            </small>
+                            {% if resource.cost_per_hour %}
+                                <small class="text-muted">
+                                    <i class="bi bi-currency-dollar"></i> ${{ resource.cost_per_hour }}/hour
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Resources pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-servers text-muted" style="font-size: 4rem;"></i>
+        <h4 class="text-muted mt-3">No resources found</h4>
+        {% if search_query %}
+            <p class="text-muted">No resources match your search criteria.</p>
+            <a href="{% url 'frontend:resources_dashboard' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> View All Resources
+            </a>
+        {% else %}
+            <p class="text-muted">Get started by adding computational resources to the system.</p>
+            <a href="{% url 'admin:resources_computationalresource_add' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add First Resource
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Recent Utilizations -->
+{% if recent_utilizations %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity"></i> Recent Resource Utilizations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Resource</th>
+                                    <th>Model/Experiment</th>
+                                    <th>CPU %</th>
+                                    <th>Memory %</th>
+                                    <th>GPU %</th>
+                                    <th>Duration</th>
+                                    <th>Started</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for util in recent_utilizations %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'frontend:resource_detail' util.resource.id %}" class="text-decoration-none">
+                                                {{ util.resource.name|truncatechars:20 }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            {% if util.model %}
+                                                <a href="{% url 'frontend:model_detail' util.model.id %}" class="text-decoration-none">
+                                                    <i class="bi bi-cpu"></i> {{ util.model.name|truncatechars:20 }}
+                                                </a>
+                                            {% elif util.experiment %}
+                                                <a href="{% url 'frontend:experiment_detail' util.experiment.id %}" class="text-decoration-none">
+                                                    <i class="bi bi-graph-up"></i> {{ util.experiment.name|truncatechars:20 }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar" style="width: {{ util.cpu_utilization_percent }}%"></div>
+                                            </div>
+                                            {{ util.cpu_utilization_percent }}%
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar bg-success" style="width: {{ util.memory_utilization_percent }}%"></div>
+                                            </div>
+                                            {{ util.memory_utilization_percent }}%
+                                        </td>
+                                        <td>
+                                            {% if util.gpu_utilization_percent %}
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar bg-warning" style="width: {{ util.gpu_utilization_percent }}%"></div>
+                                                </div>
+                                                {{ util.gpu_utilization_percent }}%
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if util.duration_seconds %}
+                                                {% if util.duration_seconds < 3600 %}
+                                                    {{ util.duration_seconds|floatformat:"0" }}s
+                                                {% else %}
+                                                    {% widthratio util.duration_seconds 3600 1 %}h
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ util.start_time|timesince }} ago</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

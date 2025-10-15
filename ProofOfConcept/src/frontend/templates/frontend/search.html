@@ -1,0 +1,353 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Search Results - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="bi bi-search"></i> Search Results
+            {% if search_query %}
+                for "{{ search_query }}"
+            {% endif %}
+        </h2>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search across all ML assets and researchers..." value="{{ search_query }}" autofocus>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search_query and results.total_results %}
+            <p class="text-muted mb-0">
+                Found {{ results.total_results }} result{{ results.total_results|pluralize }}
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+{% if search_query %}
+    {% if results.total_results > 0 %}
+        <!-- Search Results -->
+        <div class="row">
+            <!-- Models Results -->
+            {% if results.models %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-cpu"></i> ML Models
+                                <span class="badge bg-primary">{{ results.models|length }}</span>
+                                {% if results.models|length == 5 %}
+                                    <a href="{% url 'frontend:model_list' %}?q={{ search_query }}" class="btn btn-outline-primary btn-sm float-end">
+                                        View All
+                                    </a>
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for model in results.models %}
+                                <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'frontend:model_detail' model.id %}" class="text-decoration-none">
+                                            {{ model.name }}
+                                        </a>
+                                        {% with score=model.calculate_quality_score %}
+                                            {% if score >= 80 %}
+                                                <span class="quality-score quality-excellent">{{ score }}%</span>
+                                            {% elif score >= 60 %}
+                                                <span class="quality-score quality-good">{{ score }}%</span>
+                                            {% elif score >= 40 %}
+                                                <span class="quality-score quality-fair">{{ score }}%</span>
+                                            {% else %}
+                                                <span class="quality-score quality-poor">{{ score }}%</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </h6>
+                                    <p class="text-muted small mb-1">{{ model.description|truncatechars:120 }}</p>
+                                    <small class="text-muted">
+                                        {{ model.get_framework_display }} • {{ model.get_model_type_display }} •
+                                        by {{ model.created_by.full_name }} • {{ model.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Datasets Results -->
+            {% if results.datasets %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-table"></i> Datasets
+                                <span class="badge bg-success">{{ results.datasets|length }}</span>
+                                {% if results.datasets|length == 5 %}
+                                    <a href="{% url 'frontend:dataset_list' %}?q={{ search_query }}" class="btn btn-outline-success btn-sm float-end">
+                                        View All
+                                    </a>
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for dataset in results.datasets %}
+                                <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'frontend:dataset_detail' dataset.id %}" class="text-decoration-none">
+                                            {{ dataset.name }}
+                                        </a>
+                                        {% with score=dataset.calculate_quality_score %}
+                                            {% if score >= 80 %}
+                                                <span class="quality-score quality-excellent">{{ score }}%</span>
+                                            {% elif score >= 60 %}
+                                                <span class="quality-score quality-good">{{ score }}%</span>
+                                            {% elif score >= 40 %}
+                                                <span class="quality-score quality-fair">{{ score }}%</span>
+                                            {% else %}
+                                                <span class="quality-score quality-poor">{{ score }}%</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </h6>
+                                    <p class="text-muted small mb-1">{{ dataset.description|truncatechars:120 }}</p>
+                                    <small class="text-muted">
+                                        {{ dataset.format|upper }} •
+                                        {% if dataset.num_records %}{{ dataset.num_records|floatformat:"0g" }} records • {% endif %}
+                                        by {{ dataset.created_by.full_name }} • {{ dataset.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Experiments Results -->
+            {% if results.experiments %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-up"></i> Experiments
+                                <span class="badge bg-warning">{{ results.experiments|length }}</span>
+                                {% if results.experiments|length == 5 %}
+                                    <a href="{% url 'frontend:experiment_list' %}?q={{ search_query }}" class="btn btn-outline-warning btn-sm float-end">
+                                        View All
+                                    </a>
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for experiment in results.experiments %}
+                                <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'frontend:experiment_detail' experiment.id %}" class="text-decoration-none">
+                                            {{ experiment.name }}
+                                        </a>
+                                        <span class="badge badge-sm
+                                            {% if experiment.status == 'completed' %}bg-success
+                                            {% elif experiment.status == 'running' %}bg-primary
+                                            {% elif experiment.status == 'failed' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ experiment.get_status_display }}
+                                        </span>
+                                    </h6>
+                                    <p class="text-muted small mb-1">{{ experiment.description|truncatechars:120 }}</p>
+                                    <small class="text-muted">
+                                        {{ experiment.get_experiment_type_display }} •
+                                        by {{ experiment.created_by.full_name }} • {{ experiment.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Researchers Results -->
+            {% if results.researchers %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-people"></i> Researchers
+                                <span class="badge bg-secondary">{{ results.researchers|length }}</span>
+                                {% if results.researchers|length == 5 %}
+                                    <a href="{% url 'frontend:researcher_list' %}?q={{ search_query }}" class="btn btn-outline-secondary btn-sm float-end">
+                                        View All
+                                    </a>
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for researcher in results.researchers %}
+                                <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                    <h6 class="mb-1">
+                                        <a href="{% url 'frontend:researcher_detail' researcher.id %}" class="text-decoration-none">
+                                            {{ researcher.full_name }}
+                                        </a>
+                                        {% if researcher.orcid %}
+                                            <a href="https://orcid.org/{{ researcher.orcid }}" target="_blank" class="text-decoration-none">
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-person-badge"></i> ORCID
+                                                </span>
+                                            </a>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="text-muted small mb-1">{{ researcher.affiliation }} • {{ researcher.organization.name }}</p>
+                                    <small class="text-muted">
+                                        {% if researcher.research_interests %}
+                                            {% for interest in researcher.research_interests|slice:":2" %}
+                                                {{ interest }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            {% if researcher.research_interests|length > 2 %}...{% endif %}
+                                        {% endif %}
+                                        • H-index: {{ researcher.h_index }} • Citations: {{ researcher.citation_count }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Links -->
+        {% if results.total_results > 0 %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Explore More:</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if results.models %}
+                                    <a href="{% url 'frontend:model_list' %}?q={{ search_query }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-cpu"></i> All Models
+                                    </a>
+                                {% endif %}
+                                {% if results.datasets %}
+                                    <a href="{% url 'frontend:dataset_list' %}?q={{ search_query }}" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-table"></i> All Datasets
+                                    </a>
+                                {% endif %}
+                                {% if results.experiments %}
+                                    <a href="{% url 'frontend:experiment_list' %}?q={{ search_query }}" class="btn btn-outline-warning btn-sm">
+                                        <i class="bi bi-graph-up"></i> All Experiments
+                                    </a>
+                                {% endif %}
+                                {% if results.researchers %}
+                                    <a href="{% url 'frontend:researcher_list' %}?q={{ search_query }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-people"></i> All Researchers
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- No Results -->
+        <div class="text-center py-5">
+            <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No results found</h4>
+            <p class="text-muted">No ML assets or researchers match your search query "{{ search_query }}".</p>
+            <div class="mt-4">
+                <h6>Search Tips:</h6>
+                <ul class="list-unstyled text-muted">
+                    <li>• Try different keywords or phrases</li>
+                    <li>• Use broader terms (e.g., "vision" instead of "computer vision")</li>
+                    <li>• Check spelling and try alternative spellings</li>
+                    <li>• Search for researcher names, organizations, or model types</li>
+                </ul>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'frontend:home' %}" class="btn btn-primary me-2">
+                    <i class="bi bi-house"></i> Go Home
+                </a>
+                <a href="{% url 'frontend:model_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-cpu"></i> Browse All Models
+                </a>
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    <!-- Search Welcome -->
+    <div class="text-center py-5">
+        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+        <h4 class="text-muted mt-3">Search OpenModelsHub</h4>
+        <p class="text-muted">Find ML models, datasets, experiments, and researchers across the repository.</p>
+
+        <div class="row mt-5">
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cpu text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">ML Models</h6>
+                        <p class="card-text small">Search trained models by framework, type, or performance metrics</p>
+                        <a href="{% url 'frontend:model_list' %}" class="btn btn-outline-primary btn-sm">Browse Models</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-table text-success" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">Datasets</h6>
+                        <p class="card-text small">Find datasets by format, domain, or data characteristics</p>
+                        <a href="{% url 'frontend:dataset_list' %}" class="btn btn-outline-success btn-sm">Browse Datasets</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">Experiments</h6>
+                        <p class="card-text small">Explore training runs and experimental results</p>
+                        <a href="{% url 'frontend:experiment_list' %}" class="btn btn-outline-warning btn-sm">Browse Experiments</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people text-secondary" style="font-size: 2rem;"></i>
+                        <h6 class="card-title mt-2">Researchers</h6>
+                        <p class="card-text small">Connect with ML researchers and their contributions</p>
+                        <a href="{% url 'frontend:researcher_list' %}" class="btn btn-outline-secondary btn-sm">Browse Researchers</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h6>Advanced Search Features:</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled text-start text-muted">
+                        <li>• <strong>Quality Filtering:</strong> Find high-quality assets with excellent scores</li>
+                        <li>• <strong>Environmental Impact:</strong> Search by carbon footprint and sustainability</li>
+                        <li>• <strong>Standards Compliance:</strong> Filter by metadata standard coverage</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled text-start text-muted">
+                        <li>• <strong>ORCID Integration:</strong> Find researchers by their ORCID profiles</li>
+                        <li>• <strong>Provenance Tracking:</strong> Explore asset lineage and attribution</li>
+                        <li>• <strong>Multi-format Export:</strong> Download metadata in seven standards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

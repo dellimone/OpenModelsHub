@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Attribution Types
+
+      Contains researcher and organization types for attribution and provenance.
+      Maps to: schema:Person, schema:Organization, datacite:creator, datacite:publisher, prov:Agent
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- ========================================
+       RESEARCHER TYPES
+       ======================================== -->
+
+  <xs:complexType name="ResearcherRefType">
+    <xs:annotation>
+      <xs:documentation>Maps to schema:Person, datacite:creator, prov:Agent</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="firstName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:givenName, datacite:givenName</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="lastName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:familyName, datacite:familyName</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="orcidId" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to datacite:nameIdentifier, schema:identifier</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ResearcherType">
+    <xs:annotation>
+      <xs:documentation>
+        Full researcher entity
+        Maps to: schema:Person, datacite:creator, prov:Agent
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="firstName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:givenName, datacite:givenName</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="lastName" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:familyName, datacite:familyName</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="email" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:email</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="orcidId" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to datacite:nameIdentifier (scheme=ORCID), schema:identifier</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="affiliation" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:affiliation, datacite:affiliation</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="expertiseAreas" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:knowsAbout (JSON array)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="researchInterests" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:knowsAbout (JSON array)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="website" type="xs:anyURI" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:url</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="organizations" type="omh:OrganizationRefListType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:memberOf</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ========================================
+       ORGANIZATION TYPES
+       ======================================== -->
+
+  <xs:complexType name="OrganizationRefType">
+    <xs:annotation>
+      <xs:documentation>Maps to schema:Organization, datacite:publisher</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="name" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:name, datacite:publisher</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OrganizationType">
+    <xs:annotation>
+      <xs:documentation>
+        Full organization entity
+        Maps to: schema:Organization, datacite:publisher/contributor
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="name" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:name, datacite:publisher</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="type" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:@type (Organization types), datacite:contributorType</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="location" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:address</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="country" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:addressCountry</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="website" type="xs:anyURI" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to schema:url</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="rorId" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to datacite:nameIdentifier (scheme=ROR), schema:identifier</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="policies" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Organizational policies (JSON - omh: extension)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OrganizationRefListType">
+    <xs:sequence>
+      <xs:element name="organizationRef" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

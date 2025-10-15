@@ -1,0 +1,220 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Experiments - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-graph-up"></i> Experiments
+        <span class="badge bg-secondary">{{ total_count }}</span>
+    </h2>
+    <a href="{% url 'admin:assets_experiment_add' %}" class="btn btn-warning">
+        <i class="bi bi-plus-circle"></i> Add New Experiment
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Search experiments by name, description, or tags..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-warning">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if search_query %}
+            <p class="text-muted mb-0">
+                Found {{ total_count }} result{{ total_count|pluralize }} for "{{ search_query }}"
+                <a href="{% url 'frontend:experiment_list' %}" class="text-decoration-none">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Experiments List -->
+{% if page_obj %}
+    <div class="row">
+        {% for experiment in page_obj %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card asset-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">
+                                <a href="{% url 'frontend:experiment_detail' experiment.id %}" class="text-decoration-none">
+                                    {{ experiment.name|truncatechars:30 }}
+                                </a>
+                            </h5>
+                            {% with score=experiment.calculate_quality_score %}
+                                {% if score >= 80 %}
+                                    <span class="quality-score quality-excellent">{{ score }}%</span>
+                                {% elif score >= 60 %}
+                                    <span class="quality-score quality-good">{{ score }}%</span>
+                                {% elif score >= 40 %}
+                                    <span class="quality-score quality-fair">{{ score }}%</span>
+                                {% else %}
+                                    <span class="quality-score quality-poor">{{ score }}%</span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <p class="card-text text-muted small mb-2">
+                            {{ experiment.description|truncatechars:100 }}
+                        </p>
+
+                        <div class="mb-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-muted small">Type</div>
+                                    <div class="fw-bold">{{ experiment.get_experiment_type_display|truncatechars:10 }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-muted small">Status</div>
+                                    <div>
+                                        <span class="badge badge-sm
+                                            {% if experiment.status == 'completed' %}bg-success
+                                            {% elif experiment.status == 'running' %}bg-primary
+                                            {% elif experiment.status == 'failed' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ experiment.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-muted small">Version</div>
+                                    <div class="fw-bold">{{ experiment.version }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Duration and Timing -->
+                        {% if experiment.duration_seconds %}
+                            <div class="mb-2">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="text-muted small">Duration</div>
+                                        <div class="small fw-bold">
+                                            {% if experiment.duration_seconds < 3600 %}
+                                                {{ experiment.duration_seconds|floatformat:"0" }}s
+                                            {% else %}
+                                                {% widthratio experiment.duration_seconds 3600 1 %}h
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if experiment.start_time %}
+                                        <div class="col-6">
+                                            <div class="text-muted small">Started</div>
+                                            <div class="small fw-bold">{{ experiment.start_time|timesince }} ago</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Tags -->
+                        {% if experiment.tags %}
+                            <div class="mb-3">
+                                {% for tag in experiment.tags|slice:":3" %}
+                                    <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                                {% if experiment.tags|length > 3 %}
+                                    <span class="tag">+{{ experiment.tags|length|add:"-3" }} more</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Creator -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                by <a href="{% url 'frontend:researcher_detail' experiment.created_by.id %}" class="text-decoration-none">
+                                    {{ experiment.created_by.full_name }}
+                                </a>
+                            </small>
+                            <small class="text-muted">{{ experiment.created_at|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ experiment.get_visibility_display|lower }}
+                                {% if experiment.visibility == 'public' %}success
+                                {% elif experiment.visibility == 'restricted' %}warning
+                                {% else %}secondary{% endif %}">
+                                <i class="bi bi-eye"></i> {{ experiment.get_visibility_display }}
+                            </span>
+                            <span class="text-muted small">
+                                <i class="bi bi-building"></i> {{ experiment.organization.name|truncatechars:20 }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Experiments pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-graph-up text-muted" style="font-size: 4rem;"></i>
+        <h4 class="text-muted mt-3">No experiments found</h4>
+        {% if search_query %}
+            <p class="text-muted">No experiments match your search criteria.</p>
+            <a href="{% url 'frontend:experiment_list' %}" class="btn btn-outline-warning">
+                <i class="bi bi-arrow-left"></i> View All Experiments
+            </a>
+        {% else %}
+            <p class="text-muted">Get started by adding your first ML experiment to the repository.</p>
+            <a href="{% url 'admin:assets_experiment_add' %}" class="btn btn-warning">
+                <i class="bi bi-plus-circle"></i> Add First Experiment
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

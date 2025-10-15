@@ -1,0 +1,378 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}{{ dataset.name }} - OpenModelsHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="mb-2">
+            <i class="bi bi-table"></i> {{ dataset.name }}
+            <span class="badge bg-success">v{{ dataset.version }}</span>
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'frontend:home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'frontend:dataset_list' %}">Datasets</a></li>
+                <li class="breadcrumb-item active">{{ dataset.name|truncatechars:30 }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="text-end">
+        {% with score=quality_score %}
+            {% if score >= 80 %}
+                <span class="quality-score quality-excellent fs-5">{{ score }}%</span>
+            {% elif score >= 60 %}
+                <span class="quality-score quality-good fs-5">{{ score }}%</span>
+            {% elif score >= 40 %}
+                <span class="quality-score quality-fair fs-5">{{ score }}%</span>
+            {% else %}
+                <span class="quality-score quality-poor fs-5">{{ score }}%</span>
+            {% endif %}
+        {% endwith %}
+        <div class="small text-muted mt-1">Quality Score</div>
+    </div>
+</div>
+
+<!-- Dataset Overview -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Dataset Overview</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ dataset.description|default:"No description provided." }}</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metadata-section">
+                            <h6><i class="bi bi-bar-chart"></i> Dataset Statistics</h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <strong>Format:</strong><br>
+                                    <span class="badge bg-info">{{ dataset.format|upper }}</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Total Size:</strong><br>
+                                    {{ dataset.total_size_bytes|filesizeformat }}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                {% if dataset.num_records %}
+                                    <div class="col-sm-6">
+                                        <strong>Records:</strong><br>
+                                        {{ dataset.num_records|floatformat:"0g" }}
+                                    </div>
+                                {% endif %}
+                                {% if dataset.num_features %}
+                                    <div class="col-sm-6">
+                                        <strong>Features:</strong><br>
+                                        {{ dataset.num_features }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if dataset.target_column %}
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <strong>Target Column:</strong><br>
+                                        <code>{{ dataset.target_column }}</code>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metadata-section">
+                            <h6><i class="bi bi-shield-check"></i> Privacy & Ethics</h6>
+                            <div class="mb-2">
+                                <strong>Privacy Level:</strong><br>
+                                <span class="badge
+                                    {% if dataset.privacy_level == 'public' %}bg-success
+                                    {% elif dataset.privacy_level == 'confidential' %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    <i class="bi bi-shield"></i> {{ dataset.get_privacy_level_display }}
+                                </span>
+                            </div>
+                            {% if dataset.ethical_considerations %}
+                                <div class="mt-2">
+                                    <strong>Ethical Considerations:</strong><br>
+                                    <small>{{ dataset.ethical_considerations }}</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Collection Information -->
+                {% if dataset.collection_method or dataset.sampling_strategy %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-collection"></i> Data Collection</h6>
+                        <div class="row">
+                            {% if dataset.collection_method %}
+                                <div class="col-md-6">
+                                    <strong>Collection Method:</strong><br>
+                                    {{ dataset.collection_method }}
+                                </div>
+                            {% endif %}
+                            {% if dataset.sampling_strategy %}
+                                <div class="col-md-6">
+                                    <strong>Sampling Strategy:</strong><br>
+                                    {{ dataset.sampling_strategy }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="row mt-2">
+                            {% if dataset.geographic_coverage %}
+                                <div class="col-md-6">
+                                    <strong>Geographic Coverage:</strong><br>
+                                    {{ dataset.geographic_coverage }}
+                                </div>
+                            {% endif %}
+                            {% if dataset.temporal_coverage %}
+                                <div class="col-md-6">
+                                    <strong>Temporal Coverage:</strong><br>
+                                    {{ dataset.temporal_coverage }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Column Information -->
+                {% if dataset.categorical_columns or dataset.numerical_columns %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-list-columns"></i> Column Types</h6>
+                        <div class="row">
+                            {% if dataset.categorical_columns %}
+                                <div class="col-md-6">
+                                    <strong>Categorical:</strong><br>
+                                    {% for col in dataset.categorical_columns|slice:":5" %}
+                                        <span class="badge bg-secondary me-1">{{ col }}</span>
+                                    {% endfor %}
+                                    {% if dataset.categorical_columns|length > 5 %}
+                                        <span class="text-muted">+{{ dataset.categorical_columns|length|add:"-5" }} more</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            {% if dataset.numerical_columns %}
+                                <div class="col-md-6">
+                                    <strong>Numerical:</strong><br>
+                                    {% for col in dataset.numerical_columns|slice:":5" %}
+                                        <span class="badge bg-primary me-1">{{ col }}</span>
+                                    {% endfor %}
+                                    {% if dataset.numerical_columns|length > 5 %}
+                                        <span class="text-muted">+{{ dataset.numerical_columns|length|add:"-5" }} more</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Schema -->
+                {% if dataset.schema %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-diagram-2"></i> Schema</h6>
+                        <details>
+                            <summary class="text-primary" style="cursor: pointer;">View Schema Details</summary>
+                            <pre class="bg-light p-3 rounded mt-2"><code>{{ dataset.schema|pprint }}</code></pre>
+                        </details>
+                    </div>
+                {% endif %}
+
+                <!-- Tags -->
+                {% if dataset.tags %}
+                    <div class="metadata-section">
+                        <h6><i class="bi bi-tags"></i> Tags</h6>
+                        {% for tag in dataset.tags %}
+                            <span class="tag">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Metadata Card -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-file-text"></i> Metadata</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Created by:</strong><br>
+                    <a href="{% url 'frontend:researcher_detail' dataset.created_by.id %}" class="text-decoration-none">
+                        <i class="bi bi-person"></i> {{ dataset.created_by.full_name }}
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <strong>Organization:</strong><br>
+                    <i class="bi bi-building"></i> {{ dataset.organization.name }}
+                </div>
+                <div class="mb-3">
+                    <strong>Created:</strong><br>
+                    <i class="bi bi-calendar"></i> {{ dataset.created_at|date:"M d, Y" }}
+                    <small class="text-muted">({{ dataset.created_at|timesince }} ago)</small>
+                </div>
+                <div class="mb-3">
+                    <strong>Last Updated:</strong><br>
+                    <i class="bi bi-clock"></i> {{ dataset.updated_at|date:"M d, Y" }}
+                </div>
+                <div class="mb-3">
+                    <strong>Access Rights:</strong><br>
+                    <span class="badge
+                        {% if dataset.visibility == 'public' %}bg-success
+                        {% elif dataset.visibility == 'restricted' %}bg-warning
+                        {% else %}bg-secondary{% endif %}">
+                        <i class="bi bi-eye"></i> {{ dataset.get_visibility_display }}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>License:</strong><br>
+                    <span class="badge bg-info">{{ dataset.license }}</span>
+                </div>
+                <div>
+                    <strong>Persistent ID:</strong><br>
+                    <small class="text-muted font-monospace">{{ dataset.persistent_identifier }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Citation Card -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-quote"></i> Citation</h6>
+            </div>
+            <div class="card-body">
+                <div class="bg-light p-3 rounded">
+                    <small class="font-monospace">{{ citation }}</small>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm mt-2" onclick="copyToClipboard('{{ citation }}')">
+                    <i class="bi bi-clipboard"></i> Copy Citation
+                </button>
+            </div>
+        </div>
+
+        <!-- File Paths -->
+        {% if dataset.file_paths %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-folder"></i> File Locations</h6>
+                </div>
+                <div class="card-body">
+                    {% for path in dataset.file_paths|slice:":5" %}
+                        <div class="mb-1">
+                            <code class="small">{{ path }}</code>
+                        </div>
+                    {% endfor %}
+                    {% if dataset.file_paths|length > 5 %}
+                        <small class="text-muted">+{{ dataset.file_paths|length|add:"-5" }} more files</small>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Trained Models -->
+{% if trained_models %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cpu"></i> Models Trained on This Dataset
+                        <span class="badge bg-secondary">{{ trained_models.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for model in trained_models %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <a href="{% url 'frontend:model_detail' model.id %}" class="text-decoration-none">
+                                                {{ model.name }}
+                                            </a>
+                                        </h6>
+                                        <p class="card-text small text-muted">
+                                            {{ model.description|truncatechars:80 }}
+                                        </p>
+                                        <div class="row text-center">
+                                            <div class="col-4">
+                                                <div class="text-muted small">Framework</div>
+                                                <div class="fw-bold">{{ model.get_framework_display }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted small">Type</div>
+                                                <div class="fw-bold">{{ model.get_model_type_display|truncatechars:12 }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted small">Version</div>
+                                                <div class="fw-bold">{{ model.version }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'frontend:dataset_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Datasets
+                </a>
+            </div>
+            <div>
+                <div class="btn-group">
+                    <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> Export Metadata
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ dataset.id }}', 'dublin_core')">
+                            <i class="bi bi-file-text"></i> Dublin Core
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ dataset.id }}', 'datacite')">
+                            <i class="bi bi-file-richtext"></i> DataCite
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ dataset.id }}', 'dcat')">
+                            <i class="bi bi-file-code"></i> DCAT
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="downloadMetadata('{{ dataset.id }}', 'croissant')">
+                            <i class="bi bi-file-earmark"></i> Croissant
+                        </a></li>
+                    </ul>
+                </div>
+                <a href="{% url 'admin:assets_dataset_change' dataset.id %}" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Citation copied to clipboard!');
+    });
+}
+
+function downloadMetadata(datasetId, format) {
+    alert('Metadata export for ' + format + ' would be triggered here. This demonstrates the seven-standard integration capability.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:omh="https://openmodelshub.org/ontology#"
+           targetNamespace="https://openmodelshub.org/ontology#"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      OpenModelsHub Computational Resource Types
+
+      Contains types for computational infrastructure (local, cloud, HPC).
+      Maps to: HPC Ontology, mex:Execution, prov:Activity
+
+      Version: 1.0
+      Date: 2025
+      License: CC0 1.0 Universal
+    </xs:documentation>
+  </xs:annotation>
+
+  <!-- Import dependencies -->
+  <xs:include schemaLocation="omh-enumerations.xsd"/>
+  <xs:include schemaLocation="omh-attribution.xsd"/>
+
+  <!-- ========================================
+       COMPUTATIONAL RESOURCE TYPES
+       ======================================== -->
+
+  <xs:complexType name="ComputationalResourceBaseType" abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        Base type for all computational resources
+        Maps to: hpc:Hardware / hpc:Computer
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="resourceType" type="omh:ResourceTypeEnum"/>
+      <xs:element name="location" type="xs:string" minOccurs="0"/>
+      <xs:element name="availability" type="omh:AvailabilityEnum"/>
+
+      <!-- Hardware specs -->
+      <xs:element name="cpuCores" type="xs:int">
+        <xs:annotation>
+          <xs:documentation>Maps to hpc:cpuCoreCount</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="memoryGb" type="xs:float">
+        <xs:annotation>
+          <xs:documentation>Maps to hpc:memorySize</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="gpuCount" type="xs:int" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to hpc:Accelerator count</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="gpuModel" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to hpc:Accelerator properties</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Cost tracking (omh: extensions) -->
+      <xs:element name="pricingModel" type="xs:string" minOccurs="0"/>
+      <xs:element name="costPerHour" type="xs:float" minOccurs="0"/>
+      <xs:element name="currency" type="xs:string" minOccurs="0"/>
+
+      <!-- Environmental (omh: extensions) -->
+      <xs:element name="energyEfficiency" type="xs:float" minOccurs="0"/>
+      <xs:element name="carbonIntensity" type="xs:float" minOccurs="0"/>
+
+      <!-- Relationships -->
+      <xs:element name="organizations" type="omh:OrganizationRefListType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LocalResourceType">
+    <xs:annotation>
+      <xs:documentation>
+        On-premises computational resource
+        Maps to: hpc:Server
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="omh:ComputationalResourceBaseType">
+        <xs:sequence>
+          <xs:element name="hostname" type="xs:string"/>
+          <xs:element name="macAddresses" type="xs:string" minOccurs="0"/>
+          <xs:element name="localIpAddress" type="xs:string" minOccurs="0"/>
+          <xs:element name="powerConsumptionWatts" type="xs:float" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Related to HPC power properties</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="coolingType" type="xs:string" minOccurs="0"/>
+          <xs:element name="chassisType" type="xs:string" minOccurs="0"/>
+          <xs:element name="rackLocation" type="xs:string" minOccurs="0"/>
+          <xs:element name="assetTag" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="CloudResourceType">
+    <xs:annotation>
+      <xs:documentation>
+        Cloud computational resource (OpenModelsHub extension)
+        HPC Ontology lacks cloud-specific vocabulary
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="omh:ComputationalResourceBaseType">
+        <xs:sequence>
+          <xs:element name="cloudProvider" type="omh:CloudProviderEnum"/>
+          <xs:element name="providerRegion" type="xs:string"/>
+          <xs:element name="availabilityZone" type="xs:string" minOccurs="0"/>
+          <xs:element name="accountId" type="xs:string" minOccurs="0"/>
+          <xs:element name="instanceType" type="xs:string"/>
+          <xs:element name="instanceFamily" type="xs:string" minOccurs="0"/>
+          <xs:element name="virtualizationType" type="xs:string" minOccurs="0"/>
+          <xs:element name="tenancy" type="xs:string" minOccurs="0"/>
+          <xs:element name="spotPrice" type="xs:float" minOccurs="0"/>
+          <xs:element name="autoScalingEnabled" type="xs:boolean" minOccurs="0"/>
+          <xs:element name="minInstances" type="xs:int" minOccurs="0"/>
+          <xs:element name="maxInstances" type="xs:int" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="HPCResourceType">
+    <xs:annotation>
+      <xs:documentation>
+        HPC cluster resource
+        Maps to: hpc:Cluster
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="omh:ComputationalResourceBaseType">
+        <xs:sequence>
+          <xs:element name="clusterName" type="xs:string"/>
+          <xs:element name="totalNodes" type="xs:int">
+            <xs:annotation>
+              <xs:documentation>Via hpc:Cluster node count</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="nodeConfiguration" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>JSON per-node hardware specs</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="schedulerType" type="omh:SchedulerTypeEnum"/>
+          <xs:element name="schedulerVersion" type="xs:string" minOccurs="0"/>
+          <xs:element name="partitionNames" type="xs:string" minOccurs="0"/>
+          <xs:element name="queueLimits" type="xs:string" minOccurs="0"/>
+          <xs:element name="allocationPolicy" type="xs:string" minOccurs="0"/>
+          <xs:element name="maxJobDuration" type="xs:int" minOccurs="0"/>
+          <xs:element name="interconnectType" type="omh:InterconnectTypeEnum" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to HPC interconnect types</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="parallelFilesystem" type="xs:string" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Maps to HPC filesystem types (Lustre, GPFS, BeeGFS, etc.)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="ResourceUtilizationType">
+    <xs:annotation>
+      <xs:documentation>
+        Resource usage tracking
+        Maps to: mex:Execution, prov:Activity
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="resourceId" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Reference to hpc:Hardware</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="experimentId" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Maps to mex:Execution / prov:Activity</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Timing -->
+      <xs:element name="startTime" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Maps to prov:startedAtTime</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to prov:endedAtTime</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="durationSeconds" type="xs:int" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Related to HPC execution time</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+
+      <!-- Usage metrics (omh: extensions) -->
+      <xs:element name="cpuUtilizationPercent" type="xs:float" minOccurs="0"/>
+      <xs:element name="gpuUtilizationPercent" type="xs:float" minOccurs="0"/>
+      <xs:element name="memoryUsageGb" type="xs:float" minOccurs="0"/>
+      <xs:element name="storageUsageGb" type="xs:float" minOccurs="0"/>
+      <xs:element name="networkIoGb" type="xs:float" minOccurs="0"/>
+
+      <!-- Cost tracking (omh: extensions) -->
+      <xs:element name="computeCost" type="xs:float" minOccurs="0"/>
+      <xs:element name="storageCost" type="xs:float" minOccurs="0"/>
+      <xs:element name="networkCost" type="xs:float" minOccurs="0"/>
+      <xs:element name="totalCost" type="xs:float" minOccurs="0"/>
+      <xs:element name="currency" type="xs:string" minOccurs="0"/>
+
+      <!-- Environmental impact -->
+      <xs:element name="carbonFootprintKg" type="xs:float" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maps to fair4ml:hasCO2eEmissions</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="carbonFootprintLower" type="xs:float" minOccurs="0"/>
+      <xs:element name="carbonFootprintUpper" type="xs:float" minOccurs="0"/>
+      <xs:element name="energyConsumptionKwh" type="xs:float" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Related to HPC power properties</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="waterUsageLiters" type="xs:float" minOccurs="0"/>
+      <xs:element name="carbonIntensityLocation" type="xs:string" minOccurs="0"/>
+      <xs:element name="carbonIntensityValue" type="xs:float" minOccurs="0"/>
+
+      <!-- Analytics (omh: extensions) -->
+      <xs:element name="peakUsageMetrics" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>JSON maximum resource consumption</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="averageUsageMetrics" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>JSON mean resource consumption</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
